@@ -1138,7 +1138,7 @@
       <p>请在小红书订单的自动发货内容中查看解锁码，验证后即可进入完整测试。</p>
       <form id="accessForm" class="access-form">
         <input id="accessCode" type="password" inputmode="text" autocomplete="off" autocapitalize="characters" placeholder="请输入解锁码" aria-describedby="accessError" required />
-        <button id="accessSubmit" class="btn" type="button">验证并开始测试</button>
+        <button id="accessSubmit" class="btn" type="button" onclick="window.validateAccessCode()">验证并开始测试</button>
       </form>
       <p id="accessError" class="access-error" role="alert"></p>
       <p class="access-note">解锁码仅限购买用户使用，请勿外传。</p>
@@ -1371,12 +1371,18 @@
     function validateAccessCode() {
       const input = $("accessCode");
       const error = $("accessError");
+      const button = $("accessSubmit");
       error.textContent = "";
+      button.disabled = true;
+      button.textContent = "正在验证...";
       if (getAccessCode(input.value) !== ACCESS_CODE) {
         error.textContent = "解锁码不正确，请核对订单自动发货内容。";
         input.select();
+        button.disabled = false;
+        button.textContent = "验证并开始测试";
         return;
       }
+      error.textContent = "验证成功，正在进入测试...";
       unlockApp();
       try {
         sessionStorage.setItem(ACCESS_STORAGE_KEY, "granted");
@@ -1384,6 +1390,8 @@
         // The test remains available even when a browser blocks temporary storage.
       }
     }
+
+    window.validateAccessCode = validateAccessCode;
 
     $("appRoot").inert = true;
     let hasSavedAccess = false;
@@ -1400,7 +1408,6 @@
         event.preventDefault();
         validateAccessCode();
       });
-      $("accessSubmit").addEventListener("click", validateAccessCode);
     }
 
     const dimensions = [
