@@ -1,0 +1,1845 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>动物性格人格分析报告</title>
+  <meta name="description" content="测一测你的动物性格，生成专属性格分析报告。" />
+  <style>
+    :root {
+      --bg: #f4f2ef;
+      --ink: #25242a;
+      --muted: #68636c;
+      --card: rgba(255, 255, 255, .84);
+      --line: rgba(73, 68, 79, .14);
+      --forest: #526d5d;
+      --moss: #8aa36d;
+      --violet: #6d5c8d;
+      --mist: rgba(255, 255, 255, .52);
+      --shadow: 0 24px 80px rgba(48, 42, 55, .16);
+      --radius: 22px;
+    }
+
+    * { box-sizing: border-box; }
+
+    html {
+      min-height: 100%;
+      background: #efece7;
+    }
+
+    body {
+      margin: 0;
+      min-height: 100vh;
+      color: var(--ink);
+      font-family: ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", "PingFang SC", "Microsoft YaHei", sans-serif;
+      letter-spacing: 0;
+      background:
+        linear-gradient(180deg, rgba(246, 244, 239, .9), rgba(238, 234, 229, .96)),
+        radial-gradient(circle at 18% 10%, rgba(109, 92, 141, .18), transparent 28%),
+        radial-gradient(circle at 88% 18%, rgba(138, 163, 109, .2), transparent 32%),
+        linear-gradient(135deg, #e7e3dd, #f7f4ef);
+    }
+
+    body::before {
+      content: "";
+      position: fixed;
+      inset: 0;
+      pointer-events: none;
+      background-image:
+        linear-gradient(to top, rgba(45, 62, 50, .13), transparent 45%),
+        url("data:image/svg+xml,%3Csvg width='160' height='220' viewBox='0 0 160 220' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='none' stroke='%23526d5d' stroke-opacity='.18' stroke-width='1.4'%3E%3Cpath d='M20 220V82m0 0c20 23 38 42 56 58M20 82c20 3 41-8 62-34M90 220V64m0 0c18 18 34 34 50 49M90 64c17 4 33-7 50-28M132 220V108m0 0c10 11 18 22 26 34M132 108c9 1 18-5 27-20'/%3E%3C/g%3E%3C/svg%3E");
+      background-size: auto, 180px 250px;
+      opacity: .85;
+      mask-image: linear-gradient(to bottom, transparent 0%, black 16%, black 100%);
+    }
+
+    button {
+      border: 0;
+      font: inherit;
+      cursor: pointer;
+      -webkit-tap-highlight-color: transparent;
+    }
+
+    .wrap {
+      width: min(100%, 940px);
+      margin: 0 auto;
+      padding: 18px 14px 36px;
+      min-height: 100vh;
+      display: grid;
+      align-items: center;
+    }
+
+    .screen { display: none; }
+    .screen.active { display: block; }
+
+    .panel {
+      width: 100%;
+      min-height: min(720px, calc(100vh - 36px));
+      border-radius: 28px;
+      border: 1px solid rgba(255, 255, 255, .7);
+      background: linear-gradient(145deg, rgba(255,255,255,.88), rgba(246,245,241,.78));
+      box-shadow: var(--shadow);
+      overflow: hidden;
+      backdrop-filter: blur(18px);
+      position: relative;
+    }
+
+    .panel::after {
+      content: "";
+      position: absolute;
+      inset: 0;
+      pointer-events: none;
+      background: linear-gradient(120deg, rgba(255,255,255,.52), transparent 42%, rgba(109,92,141,.05));
+    }
+
+    .content {
+      position: relative;
+      z-index: 1;
+      padding: 40px;
+    }
+
+    .hero {
+      display: grid;
+      grid-template-columns: 1.06fr .94fr;
+      min-height: inherit;
+    }
+
+    .hero-copy {
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      padding: 54px 44px;
+      position: relative;
+      z-index: 1;
+    }
+
+    .hero-art {
+      min-height: 520px;
+      position: relative;
+      overflow: hidden;
+      background:
+        linear-gradient(180deg, rgba(31, 39, 35, .03), rgba(54, 47, 66, .2)),
+        url("forest-personality-hero.png") center / cover no-repeat;
+    }
+
+    .hero-art::before {
+      content: "";
+      position: absolute;
+      inset: 8% 8% 10%;
+      border-radius: 40px;
+      border: 1px solid rgba(255, 255, 255, .46);
+      box-shadow: inset 0 0 90px rgba(255,255,255,.2), 0 22px 55px rgba(48,42,55,.16);
+    }
+
+    .animal-mark {
+      position: absolute;
+      left: 50%;
+      top: 50%;
+      transform: translate(-50%, -50%);
+      width: 250px;
+      aspect-ratio: 1;
+      border-radius: 50%;
+      display: grid;
+      place-items: center;
+      text-align: center;
+      background: rgba(255,255,255,.68);
+      border: 1px solid rgba(255,255,255,.7);
+      box-shadow: 0 18px 60px rgba(48,42,55,.18);
+      color: #40384b;
+      font-weight: 850;
+      line-height: 1.45;
+      z-index: 2;
+    }
+
+    .animal-mark span {
+      display: block;
+      font-size: 46px;
+      line-height: 1;
+      margin-bottom: 12px;
+    }
+
+    .badge {
+      display: inline-flex;
+      width: fit-content;
+      align-items: center;
+      min-height: 30px;
+      padding: 6px 12px;
+      border-radius: 999px;
+      background: rgba(255,255,255,.72);
+      border: 1px solid rgba(82,109,93,.18);
+      color: #526d5d;
+      font-size: 13px;
+      font-weight: 780;
+    }
+
+    h1 {
+      margin: 18px 0 0;
+      font-size: clamp(38px, 5.3vw, 64px);
+      line-height: 1.05;
+      letter-spacing: 0;
+      font-weight: 900;
+      color: #27242c;
+    }
+
+    .sub {
+      margin: 18px 0 0;
+      color: var(--muted);
+      font-size: 17px;
+      line-height: 1.82;
+      max-width: 560px;
+    }
+
+    .actions {
+      margin-top: 30px;
+      display: flex;
+      flex-wrap: wrap;
+      gap: 12px;
+    }
+
+    .btn {
+      min-height: 50px;
+      border-radius: 999px;
+      padding: 13px 22px;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      color: white;
+      font-weight: 820;
+      background: linear-gradient(135deg, var(--forest), var(--violet));
+      box-shadow: 0 14px 30px rgba(82, 109, 93, .24);
+      transition: transform .18s ease, box-shadow .18s ease, opacity .18s ease;
+    }
+
+    .btn:hover { transform: translateY(-1px); box-shadow: 0 18px 36px rgba(82, 109, 93, .3); }
+    .btn.secondary {
+      background: rgba(255,255,255,.65);
+      color: #4f4858;
+      border: 1px solid var(--line);
+      box-shadow: none;
+    }
+    .btn:disabled {
+      opacity: .45;
+      cursor: not-allowed;
+      transform: none;
+      box-shadow: none;
+    }
+
+    .selling-points {
+      display: grid;
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+      gap: 10px;
+      margin-top: 28px;
+      max-width: 600px;
+    }
+
+    .point {
+      padding: 12px;
+      border-radius: 16px;
+      border: 1px solid var(--line);
+      background: rgba(255,255,255,.55);
+      color: #5f5964;
+      font-size: 13px;
+      line-height: 1.5;
+    }
+
+    .topbar {
+      position: relative;
+      z-index: 2;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 12px;
+      padding: 18px 22px;
+      border-bottom: 1px solid var(--line);
+      background: rgba(255,255,255,.42);
+    }
+
+    .back {
+      background: transparent;
+      color: #62596a;
+      font-weight: 780;
+      padding: 8px 0;
+    }
+
+    .top-title {
+      font-weight: 860;
+      color: #38333f;
+      text-align: right;
+    }
+
+    .mode-grid {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 16px;
+      margin-top: 28px;
+    }
+
+    .mode {
+      text-align: left;
+      min-height: 190px;
+      border-radius: 22px;
+      padding: 22px;
+      border: 1px solid rgba(82,109,93,.18);
+      background: rgba(255,255,255,.62);
+      color: var(--ink);
+      transition: transform .18s ease, border-color .18s ease, background .18s ease;
+    }
+
+    .mode:hover {
+      transform: translateY(-2px);
+      border-color: rgba(109,92,141,.32);
+      background: rgba(255,255,255,.86);
+    }
+
+    .mode strong {
+      display: block;
+      font-size: 24px;
+      margin-bottom: 10px;
+      color: #302b36;
+    }
+
+    .mode span {
+      display: block;
+      color: var(--muted);
+      line-height: 1.75;
+      font-size: 15px;
+    }
+
+    .tags {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+      margin-top: 18px;
+    }
+
+    .tag {
+      display: inline-flex;
+      min-height: 28px;
+      align-items: center;
+      border-radius: 999px;
+      padding: 5px 10px;
+      background: rgba(82,109,93,.1);
+      color: #526d5d;
+      font-style: normal;
+      font-size: 12px;
+      font-weight: 760;
+    }
+
+    .quiz {
+      max-width: 780px;
+      margin: 0 auto;
+      padding: 30px 28px 34px;
+    }
+
+    .scene {
+      height: 196px;
+      margin-bottom: 24px;
+      border-radius: 20px;
+      overflow: hidden;
+      position: relative;
+      isolation: isolate;
+      border: 1px solid rgba(255,255,255,.64);
+      background-image:
+        linear-gradient(180deg, rgba(37,42,40,.08), rgba(32,30,38,.32)),
+        url("forest-personality-hero.png");
+      background-size: cover;
+      background-position: center 48%;
+      box-shadow: inset 0 0 45px rgba(255,255,255,.2), 0 12px 32px rgba(48,42,55,.12);
+      transition: filter .35s ease, background-position .5s ease;
+    }
+
+    .scene::before {
+      content: "";
+      position: absolute;
+      z-index: 1;
+      inset: 35% -20% -20%;
+      background: radial-gradient(ellipse at center, rgba(255,255,255,.76), rgba(255,255,255,0) 68%);
+      filter: blur(12px);
+      animation: driftFog 8s ease-in-out infinite alternate;
+    }
+
+    .scene::after {
+      content: "";
+      position: absolute;
+      z-index: 2;
+      inset: 0;
+      opacity: .55;
+      background-image: radial-gradient(circle, rgba(255,244,190,.95) 0 1.5px, transparent 2px);
+      background-size: 54px 58px;
+      animation: fireflies 9s linear infinite;
+    }
+
+    .scene.scene-night { filter: brightness(.78) saturate(.76) hue-rotate(12deg); background-position: center 35%; }
+    .scene.scene-fire { filter: sepia(.18) saturate(1.12); background-position: center 64%; }
+    .scene.scene-rain::after {
+      opacity: .35;
+      background-image: repeating-linear-gradient(105deg, transparent 0 16px, rgba(225,237,240,.7) 17px, transparent 18px 35px);
+      background-size: 140px 140px;
+      animation: rain 1.6s linear infinite;
+    }
+    .scene.scene-water { filter: saturate(.82) hue-rotate(18deg) brightness(.96); background-position: center 72%; }
+    .scene.scene-cave { filter: brightness(.62) saturate(.7); background-position: 22% 55%; }
+    .scene.scene-ridge { filter: contrast(1.05) brightness(1.08); background-position: center 12%; }
+    .scene.scene-storm { filter: brightness(.68) contrast(1.12) saturate(.62); }
+    .scene.scene-dawn { filter: brightness(1.08) saturate(.82); background-position: center 48%; }
+    .scene.scene-grove { filter: saturate(.92) hue-rotate(-8deg); background-position: 68% 58%; }
+    .scene.scene-twilight { filter: saturate(.72) hue-rotate(24deg) brightness(.86); }
+    .scene.scene-stars { filter: brightness(.62) saturate(.8) hue-rotate(22deg); background-position: center 24%; }
+
+    .scene-center {
+      position: absolute;
+      z-index: 3;
+      inset: 0;
+      display: grid;
+      place-items: center;
+      text-align: center;
+      color: white;
+      text-shadow: 0 2px 18px rgba(17,20,18,.72);
+    }
+
+    .scene-icon {
+      display: block;
+      font-size: 44px;
+      filter: drop-shadow(0 8px 18px rgba(20,22,20,.3));
+      animation: sceneFloat 3.4s ease-in-out infinite;
+    }
+
+    .scene-label {
+      display: inline-flex;
+      margin-top: 8px;
+      padding: 5px 10px;
+      border-radius: 999px;
+      background: rgba(38,38,43,.26);
+      backdrop-filter: blur(8px);
+      font-size: 12px;
+      font-weight: 800;
+    }
+
+    .sound-toggle {
+      position: fixed;
+      z-index: 30;
+      right: 18px;
+      bottom: 18px;
+      min-height: 42px;
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      padding: 9px 13px;
+      border-radius: 999px;
+      border: 1px solid rgba(255,255,255,.65);
+      color: #4d4654;
+      background: rgba(255,255,255,.78);
+      box-shadow: 0 12px 30px rgba(48,42,55,.14);
+      backdrop-filter: blur(12px);
+      font-weight: 780;
+    }
+
+    .sound-toggle.on { color: white; background: linear-gradient(135deg, var(--forest), var(--violet)); }
+
+    @keyframes driftFog { from { transform: translateX(-5%) scale(1); } to { transform: translateX(7%) scale(1.08); } }
+    @keyframes fireflies { from { transform: translate3d(0, 12px, 0); } to { transform: translate3d(24px, -20px, 0); } }
+    @keyframes rain { from { transform: translate3d(-20px, -50px, 0); } to { transform: translate3d(20px, 70px, 0); } }
+    @keyframes sceneFloat { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-7px); } }
+
+    .progress-row {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      color: var(--muted);
+      font-size: 14px;
+      font-weight: 760;
+    }
+
+    .progress {
+      flex: 1;
+      height: 9px;
+      border-radius: 999px;
+      background: rgba(73,68,79,.12);
+      overflow: hidden;
+    }
+
+    .progress i {
+      display: block;
+      width: 20%;
+      height: 100%;
+      border-radius: inherit;
+      background: linear-gradient(90deg, var(--forest), var(--violet));
+      transition: width .25s ease;
+    }
+
+    .question {
+      margin: 30px 0 14px;
+      font-size: clamp(25px, 3vw, 36px);
+      line-height: 1.34;
+      letter-spacing: 0;
+      font-weight: 890;
+      color: #292630;
+    }
+
+    .hint {
+      margin: 0 0 20px;
+      color: var(--muted);
+      line-height: 1.75;
+    }
+
+    .options {
+      display: grid;
+      gap: 12px;
+    }
+
+    .option {
+      width: 100%;
+      display: grid;
+      grid-template-columns: 34px 1fr;
+      gap: 12px;
+      align-items: start;
+      text-align: left;
+      padding: 16px;
+      border-radius: 18px;
+      border: 1px solid var(--line);
+      background: rgba(255,255,255,.66);
+      color: #332f39;
+      line-height: 1.6;
+      transition: transform .16s ease, border-color .16s ease, background .16s ease;
+    }
+
+    .option:hover {
+      transform: translateY(-1px);
+      border-color: rgba(82,109,93,.28);
+      background: rgba(255,255,255,.9);
+    }
+
+    .option.selected {
+      border-color: rgba(109,92,141,.46);
+      background: rgba(236, 232, 244, .78);
+    }
+
+    .option.locked { pointer-events: none; }
+
+    .letter {
+      width: 30px;
+      height: 30px;
+      border-radius: 10px;
+      display: grid;
+      place-items: center;
+      background: rgba(82,109,93,.12);
+      color: #526d5d;
+      font-weight: 900;
+      line-height: 1;
+    }
+
+    .quiz-actions {
+      margin-top: 22px;
+      display: flex;
+      justify-content: flex-start;
+      gap: 12px;
+    }
+
+    .auto-note {
+      margin-left: auto;
+      align-self: center;
+      color: var(--muted);
+      font-size: 13px;
+    }
+
+    .complete-card {
+      max-width: 680px;
+      margin: 0 auto;
+      text-align: center;
+      padding: 42px 26px;
+    }
+
+    .complete-icon {
+      width: 108px;
+      height: 108px;
+      margin: 0 auto 18px;
+      border-radius: 32px;
+      display: grid;
+      place-items: center;
+      background: rgba(255,255,255,.7);
+      border: 1px solid var(--line);
+      font-size: 52px;
+    }
+
+    .result-wrap {
+      max-width: 820px;
+      margin: 0 auto;
+      padding: 28px;
+    }
+
+    .result-hero {
+      display: grid;
+      grid-template-columns: 210px 1fr;
+      gap: 28px;
+      align-items: center;
+      padding: 28px;
+      border-radius: 22px;
+      border: 1px solid rgba(82,109,93,.18);
+      background: rgba(255,255,255,.62);
+    }
+
+    .result-animal {
+      aspect-ratio: 1;
+      display: grid;
+      place-items: center;
+      border-radius: 50%;
+      background:
+        radial-gradient(circle at 46% 38%, rgba(255,255,255,.95), rgba(227,233,224,.72) 55%, rgba(109,92,141,.16));
+      border: 1px solid rgba(82,109,93,.17);
+      font-size: 92px;
+      box-shadow: inset 0 0 40px rgba(255,255,255,.65), 0 18px 45px rgba(48,42,55,.13);
+    }
+
+    .result-label {
+      color: var(--forest);
+      font-size: 13px;
+      font-weight: 850;
+    }
+
+    .result-name {
+      margin: 8px 0 0;
+      font-size: clamp(36px, 5vw, 58px);
+      line-height: 1.08;
+      font-weight: 920;
+    }
+
+    .result-title {
+      margin: 8px 0 0;
+      color: var(--violet);
+      font-size: 18px;
+      font-weight: 820;
+    }
+
+    .result-quote {
+      margin: 16px 0 0;
+      color: var(--muted);
+      line-height: 1.75;
+    }
+
+    .keyword-row {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+      margin-top: 16px;
+    }
+
+    .result-grid {
+      display: grid;
+      grid-template-columns: minmax(0, .9fr) minmax(0, 1.1fr);
+      gap: 16px;
+      margin-top: 16px;
+    }
+
+    .report-card {
+      padding: 22px;
+      border-radius: 18px;
+      border: 1px solid var(--line);
+      background: rgba(255,255,255,.58);
+    }
+
+    .report-card h3 {
+      margin: 0 0 12px;
+      font-size: 18px;
+    }
+
+    .report-card p,
+    .report-card li {
+      color: var(--muted);
+      line-height: 1.78;
+    }
+
+    .report-card p { margin: 0; }
+    .report-card ul { margin: 0; padding-left: 1.2em; }
+
+    .deep-report {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 16px;
+      margin-top: 16px;
+    }
+
+    .deep-report .wide { grid-column: 1 / -1; }
+
+    .insight-grid {
+      display: grid;
+      gap: 11px;
+      margin-top: 14px;
+    }
+
+    .insight-row {
+      padding: 13px 14px;
+      border-radius: 14px;
+      background: rgba(255,255,255,.06);
+      border: 1px solid rgba(255,255,255,.08);
+    }
+
+    .insight-row strong { display: block; color: #fffaf0; font-size: 14px; }
+    .insight-row p { margin-top: 5px; font-size: 14px; }
+
+    .route-list { display: grid; gap: 12px; margin-top: 12px; }
+    .route-step { display: grid; grid-template-columns: 28px 1fr; gap: 11px; align-items: start; }
+    .route-step b {
+      width: 28px;
+      height: 28px;
+      display: grid;
+      place-items: center;
+      border-radius: 9px;
+      color: #1a281b;
+      background: linear-gradient(135deg, #d7d79b, #b8a1d1);
+      font-size: 13px;
+    }
+    .route-step span { color: var(--muted); line-height: 1.65; }
+
+    .radar {
+      width: min(100%, 360px);
+      display: block;
+      margin: 0 auto;
+      overflow: visible;
+    }
+
+    .dimension-list {
+      display: grid;
+      gap: 12px;
+      margin-top: 18px;
+    }
+
+    .dimension-head {
+      display: flex;
+      justify-content: space-between;
+      gap: 12px;
+      margin-bottom: 6px;
+      color: #4e4854;
+      font-size: 13px;
+      font-weight: 780;
+    }
+
+    .dimension-bar {
+      height: 7px;
+      overflow: hidden;
+      border-radius: 999px;
+      background: rgba(73,68,79,.1);
+    }
+
+    .dimension-bar i {
+      display: block;
+      height: 100%;
+      border-radius: inherit;
+      background: linear-gradient(90deg, var(--forest), var(--violet));
+    }
+
+    .secondary-match {
+      margin-top: 16px;
+      padding: 14px 16px;
+      border-radius: 15px;
+      background: rgba(109,92,141,.08);
+      color: #5c5268;
+      line-height: 1.65;
+    }
+
+    .result-actions {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 10px;
+      margin-top: 18px;
+    }
+
+    .upgrade-card {
+      display: grid;
+      grid-template-columns: 1fr auto;
+      gap: 22px;
+      align-items: center;
+      margin-top: 18px;
+      padding: 24px;
+      border-radius: 20px;
+      border: 1px solid rgba(230, 228, 177, .34);
+      background: linear-gradient(115deg, rgba(35, 71, 46, .74), rgba(79, 54, 91, .7));
+      box-shadow: 0 20px 44px rgba(0,0,0,.18);
+      backdrop-filter: blur(16px);
+    }
+
+    .upgrade-card strong { display: block; color: #fffaf0; font-size: 21px; }
+    .upgrade-card p { margin: 7px 0 0; color: rgba(250,246,236,.78); line-height: 1.7; }
+    .share-invite {
+      margin: 18px 0 0;
+      padding: 11px 14px;
+      border-radius: 14px;
+      color: #f4f1d5;
+      border: 1px solid rgba(224, 231, 175, .28);
+      background: rgba(10, 35, 23, .48);
+      line-height: 1.6;
+      backdrop-filter: blur(10px);
+    }
+    .hidden { display: none !important; }
+
+    .toast {
+      position: fixed;
+      left: 50%;
+      bottom: 28px;
+      z-index: 20;
+      transform: translate(-50%, 18px);
+      padding: 11px 16px;
+      border-radius: 999px;
+      color: white;
+      background: rgba(42,38,48,.92);
+      opacity: 0;
+      pointer-events: none;
+      transition: opacity .2s ease, transform .2s ease;
+    }
+
+    .toast.show { opacity: 1; transform: translate(-50%, 0); }
+
+    .atlas-intro { max-width: 650px; }
+
+    .atlas-grid {
+      display: grid;
+      grid-template-columns: repeat(4, minmax(0, 1fr));
+      gap: 12px;
+      margin-top: 24px;
+    }
+
+    .animal-card {
+      padding: 18px 14px;
+      text-align: center;
+      border-radius: 17px;
+      border: 1px solid var(--line);
+      background: rgba(255,255,255,.56);
+    }
+
+    .animal-card span { display: block; font-size: 38px; }
+    .animal-card strong { display: block; margin-top: 8px; }
+    .animal-card small { display: block; margin-top: 5px; color: var(--muted); line-height: 1.45; }
+
+    @media (max-width: 760px) {
+      .wrap { padding: 12px 10px 26px; align-items: start; }
+      .panel { min-height: calc(100vh - 24px); border-radius: 24px; }
+      .hero { grid-template-columns: 1fr; }
+      .hero-copy { padding: 34px 22px 24px; }
+      .hero-art { min-height: 300px; }
+      .hero-art::before { inset: 4% 5% 8%; border-radius: 28px; }
+      .animal-mark { width: 190px; }
+      .animal-mark span { font-size: 38px; }
+      .content { padding: 26px 18px; }
+      .selling-points, .mode-grid { grid-template-columns: 1fr; }
+      .quiz { padding: 24px 16px 28px; }
+      .scene { height: 158px; margin-bottom: 20px; }
+      .topbar { padding: 15px 16px; }
+      .mode { min-height: 168px; }
+      .actions .btn { width: 100%; }
+      .quiz-actions {
+        position: sticky;
+        bottom: 0;
+        padding-top: 12px;
+        background: linear-gradient(to top, rgba(244,242,239,.98), rgba(244,242,239,0));
+      }
+      .result-wrap { padding: 20px 14px 28px; }
+      .result-hero { grid-template-columns: 1fr; text-align: center; padding: 22px 18px; }
+      .result-animal { width: 168px; margin: 0 auto; font-size: 76px; }
+      .keyword-row, .result-actions { justify-content: center; }
+      .result-grid { grid-template-columns: 1fr; }
+      .deep-report { grid-template-columns: 1fr; }
+      .deep-report .wide { grid-column: auto; }
+      .atlas-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+      .sound-toggle {
+        right: 12px;
+        bottom: 12px;
+        width: 44px;
+        height: 44px;
+        min-height: 44px;
+        justify-content: center;
+        padding: 0;
+      }
+      .sound-toggle #soundText { display: none; }
+    }
+
+    @media (prefers-reduced-motion: reduce) {
+      *, *::before, *::after { animation-duration: .01ms !important; animation-iteration-count: 1 !important; scroll-behavior: auto !important; }
+    }
+
+    @media print {
+      body { background: white; }
+      body::before, .topbar, .result-actions { display: none !important; }
+      .wrap, .panel { padding: 0; min-height: 0; box-shadow: none; border: 0; }
+      .result-wrap { max-width: 100%; padding: 0; }
+    }
+
+    /* Immersive forest redesign: scenes are page backgrounds, never content thumbnails. */
+    :root {
+      --ink: #f7f2e8;
+      --muted: rgba(241, 238, 226, .76);
+      --forest: #7fb08d;
+      --moss: #b1c788;
+      --violet: #b59ad3;
+      --line: rgba(240, 232, 208, .22);
+    }
+
+    html, body { background: #07100d; }
+
+    body {
+      color: var(--ink);
+      background: #07100d;
+      overflow-x: hidden;
+      --weather-layer: none;
+    }
+
+    body::before {
+      z-index: 0;
+      opacity: 1;
+      background: url("forest-dawn.png") center / cover no-repeat;
+      mask-image: none;
+      animation: forestDrift 22s ease-in-out infinite alternate;
+    }
+
+    body::after {
+      content: "";
+      position: fixed;
+      z-index: 1;
+      inset: 0;
+      pointer-events: none;
+      background-image:
+        var(--weather-layer),
+        linear-gradient(90deg, rgba(2, 10, 7, .86) 0%, rgba(2, 10, 7, .61) 43%, rgba(2, 10, 7, .2) 74%, rgba(2, 10, 7, .42) 100%),
+        linear-gradient(180deg, rgba(2, 9, 7, .2), rgba(2, 9, 7, .76));
+      background-size: auto, cover, cover;
+      animation: weatherDrift 15s linear infinite;
+    }
+
+    body[data-scene="night"]::before { background-image: url("forest-night.png"); }
+    body[data-scene="fire"]::before { background-image: url("forest-fire.png"); }
+    body[data-scene="territory"]::before { background-image: url("forest-territory.png"); }
+    body[data-scene="storm"]::before { background-image: url("forest-storm.png"); }
+    body[data-scene="return"]::before { background-image: url("forest-return.png"); }
+    body[data-variant="v0"]::before { background-position: 16% 48%; }
+    body[data-variant="v1"]::before { background-position: 34% 34%; }
+    body[data-variant="v2"]::before { background-position: 54% 56%; }
+    body[data-variant="v3"]::before { background-position: 74% 40%; }
+    body[data-variant="v4"]::before { background-position: 87% 65%; }
+
+    body[data-question-scene="rain"] { --weather-layer: repeating-linear-gradient(108deg, transparent 0 18px, rgba(207,232,236,.19) 19px, transparent 20px 39px); }
+    body[data-question-scene="storm"] { --weather-layer: radial-gradient(ellipse at 72% 18%, rgba(204,239,255,.22), transparent 32%); }
+    body[data-question-scene="fire"] { --weather-layer: radial-gradient(circle at 72% 69%, rgba(255,180,70,.25) 0 1px, transparent 2px); }
+    body[data-question-scene="water"] { --weather-layer: radial-gradient(ellipse at 66% 74%, rgba(186,230,238,.16), transparent 42%); }
+    body[data-question-scene="stars"] { --weather-layer: radial-gradient(circle at 70% 19%, rgba(240,240,205,.18) 0 1px, transparent 2px); }
+    body[data-question-scene="cave"]::after { background-color: rgba(0,0,0,.18); }
+
+    @keyframes forestDrift {
+      from { transform: scale(1.025) translate3d(0, 0, 0); }
+      to { transform: scale(1.08) translate3d(-1.2%, -0.8%, 0); }
+    }
+
+    @keyframes weatherDrift {
+      from { background-position: 0 0, center, center; }
+      to { background-position: 44px 96px, center, center; }
+    }
+
+    .wrap {
+      width: min(100%, 1180px);
+      min-height: 100svh;
+      position: relative;
+      z-index: 2;
+      padding: 24px;
+    }
+
+    .panel {
+      min-height: calc(100svh - 48px);
+      border: 0;
+      border-radius: 0;
+      background: transparent;
+      box-shadow: none;
+      overflow: visible;
+      backdrop-filter: none;
+    }
+
+    .panel::after { display: none; }
+
+    .hero { display: block; min-height: inherit; }
+    .hero-art { display: none; }
+
+    .hero-copy {
+      min-height: inherit;
+      max-width: 720px;
+      padding: clamp(82px, 13vh, 150px) clamp(16px, 5vw, 74px) 72px;
+      justify-content: center;
+    }
+
+    .badge, .tag {
+      color: #e6e9c9;
+      background: rgba(13, 35, 25, .56);
+      border-color: rgba(219, 230, 181, .3);
+      backdrop-filter: blur(12px);
+    }
+
+    h1, .question, .top-title, .mode strong, .result-name, .report-card h3, .animal-card strong { color: #fffaf0; }
+
+    h1 {
+      font-size: clamp(48px, 6.2vw, 78px);
+      text-shadow: 0 4px 30px rgba(0, 0, 0, .38);
+    }
+
+    .sub, .hint, .result-quote, .report-card p, .report-card li, .animal-card small { color: var(--muted); }
+
+    .sub { font-size: 17px; max-width: 600px; text-shadow: 0 2px 18px rgba(0,0,0,.45); }
+
+    .btn {
+      color: #102218;
+      background: linear-gradient(135deg, #d7d79b, #b8a1d1);
+      box-shadow: 0 16px 38px rgba(0, 0, 0, .32);
+    }
+
+    .btn.secondary {
+      color: #fff9ef;
+      border-color: rgba(255,255,255,.28);
+      background: rgba(8, 24, 17, .48);
+      backdrop-filter: blur(12px);
+    }
+
+    .selling-points { max-width: 600px; }
+    .point {
+      border-color: rgba(240,232,208,.22);
+      color: rgba(250,246,236,.86);
+      background: rgba(5, 21, 14, .48);
+      backdrop-filter: blur(12px);
+    }
+
+    .topbar {
+      border-bottom-color: rgba(240,232,208,.18);
+      background: rgba(3, 15, 10, .22);
+      backdrop-filter: blur(10px);
+    }
+
+    .back, .top-title { color: #fffaf0; }
+
+    .content { max-width: 980px; padding: clamp(56px, 10vh, 110px) clamp(18px, 5vw, 68px); }
+
+    .mode-grid { max-width: 800px; }
+    .mode {
+      color: #fffaf0;
+      border-color: rgba(240,232,208,.24);
+      background: rgba(4, 21, 14, .55);
+      backdrop-filter: blur(16px);
+      box-shadow: 0 20px 48px rgba(0,0,0,.2);
+    }
+    .mode:hover { border-color: rgba(224,218,160,.66); background: rgba(12, 37, 26, .72); }
+    .mode span { color: var(--muted); }
+
+    .scene { display: none; }
+    .quiz { max-width: 800px; margin: 0; padding: clamp(68px, 12vh, 132px) clamp(18px, 6vw, 74px) 68px; }
+    .progress-row { color: rgba(255,250,240,.78); }
+    .progress { background: rgba(255,255,255,.17); }
+    .progress i { background: linear-gradient(90deg, #a5cf97, #d5b4e3); }
+    .question { margin-top: 40px; text-shadow: 0 3px 26px rgba(0,0,0,.45); }
+    .hint { text-shadow: 0 2px 16px rgba(0,0,0,.45); }
+    .option {
+      color: #fffaf0;
+      border-color: rgba(240,232,208,.23);
+      background: rgba(4, 19, 13, .58);
+      backdrop-filter: blur(14px);
+      box-shadow: 0 10px 26px rgba(0,0,0,.15);
+    }
+    .option:hover { border-color: rgba(220,222,169,.68); background: rgba(13, 42, 29, .7); }
+    .option.selected { border-color: rgba(219,205,160,.9); background: rgba(78, 79, 55, .7); }
+    .letter { color: #e8e9c2; background: rgba(183, 211, 154, .18); }
+    .auto-note { color: rgba(255,250,240,.68); }
+    .quiz-actions { background: transparent !important; }
+
+    .result-wrap { max-width: 1060px; padding: 72px clamp(18px, 6vw, 74px); }
+    .result-hero, .report-card, .animal-card {
+      border-color: rgba(240,232,208,.2);
+      background: rgba(3, 18, 12, .62);
+      box-shadow: 0 20px 44px rgba(0,0,0,.16);
+      backdrop-filter: blur(16px);
+    }
+    .result-animal {
+      background: radial-gradient(circle at 46% 38%, rgba(239,235,204,.28), rgba(31,70,48,.44) 58%, rgba(12,24,17,.68));
+      border-color: rgba(229,227,182,.24);
+    }
+    .result-label { color: #dce3ad; }
+    .result-title { color: #d4b9e0; }
+    .secondary-match { color: #eee8d9; background: rgba(135,102,150,.26); }
+    .dimension-head { color: #f6f0e4; }
+    .dimension-bar { background: rgba(255,255,255,.15); }
+    .dimension-bar i { background: linear-gradient(90deg, #9fc697, #c6a6d2); }
+
+    .atlas-intro { color: var(--muted); }
+    .animal-card { background: rgba(3, 18, 12, .54); }
+    .toast { background: rgba(7, 29, 18, .94); border: 1px solid rgba(227,227,183,.26); }
+    .sound-toggle {
+      color: #fffaf0;
+      border-color: rgba(240,232,208,.3);
+      background: rgba(5, 22, 14, .72);
+    }
+    .sound-toggle.on { color: #101d14; background: linear-gradient(135deg, #d7d79b, #b8a1d1); }
+
+    @media (max-width: 760px) {
+      .wrap { width: 100%; padding: 0; }
+      .panel { min-height: 100svh; }
+      .hero-copy { padding: 88px 25px 62px; }
+      .content { padding: 72px 25px 46px; }
+      .quiz { padding: 72px 25px 54px; }
+      .result-wrap { padding: 54px 18px 74px; }
+      .topbar { padding: 17px 22px; }
+      h1 { font-size: clamp(42px, 12vw, 58px); }
+      .result-name { font-size: 56px; }
+      .upgrade-card { grid-template-columns: 1fr; padding: 20px; }
+      .upgrade-card .btn { width: 100%; }
+    }
+  </style>
+</head>
+<body>
+  <main class="wrap">
+    <section id="home" class="screen active">
+      <div class="panel hero">
+        <div class="hero-copy">
+          <div class="badge">动物性格人格分析报告</div>
+          <h1>测一测你的<br>动物性格</h1>
+          <p class="sub">通过森林情境测试，分析你更接近哪一种动物性格，并生成专属性格解析报告。</p>
+          <p id="sharedInvite" class="share-invite hidden"></p>
+          <div class="actions">
+            <button class="btn" data-go="mode">开始测试</button>
+            <button class="btn secondary" data-go="mode">查看测试模式</button>
+          </div>
+          <div class="selling-points">
+            <div class="point">20种动物人格<br>对应不同性格底色</div>
+            <div class="point">森林情境选择<br>更有代入感</div>
+            <div class="point">附维度分析<br>适合截图分享</div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section id="mode" class="screen">
+      <div class="panel">
+        <div class="topbar">
+          <button class="back" data-go="home">← 返回首页</button>
+          <div class="top-title">选择测试模式</div>
+        </div>
+        <div class="content">
+          <div class="badge">测试入口</div>
+          <h1 style="font-size:clamp(31px,4vw,46px);">选择你的森林探索深度</h1>
+          <p class="sub">简易版适合快速了解动物人格，完整版会从本能、关系、领地、风险和行动方式做更完整的分析。</p>
+          <div class="mode-grid">
+            <button class="mode" data-start="quick">
+              <strong>简易版测试</strong>
+              <span>20道森林情境题，快速测出你的动物性格原型。</span>
+              <div class="tags"><i class="tag">约5-8分钟</i><i class="tag">适合快速体验</i></div>
+            </button>
+            <button class="mode" data-start="full">
+              <strong>完整版测试</strong>
+              <span>60道深入题目，生成更完整的动物人格分析报告。</span>
+              <div class="tags"><i class="tag">约15-20分钟</i><i class="tag">商品正式版</i></div>
+            </button>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section id="quiz" class="screen">
+      <div class="panel">
+        <div class="topbar">
+          <button class="back" data-go="mode">← 返回模式</button>
+          <div class="top-title">动物性格测试</div>
+        </div>
+        <div class="quiz">
+          <div id="scene" class="scene scene-dawn">
+            <div class="scene-center">
+              <div><span id="sceneIcon" class="scene-icon">🌲</span><span id="sceneLabel" class="scene-label">第一章 · 入林</span></div>
+            </div>
+          </div>
+          <div class="progress-row">
+            <span id="progressText">第 1 / 5 题</span>
+            <div class="progress"><i id="progressBar"></i></div>
+          </div>
+          <h2 id="question" class="question"></h2>
+          <p class="hint">不要思考太久，选你进入这片森林时最自然的第一反应。</p>
+          <div id="options" class="options"></div>
+          <div class="quiz-actions">
+            <button id="prevBtn" class="btn secondary">← 上一题</button>
+            <span class="auto-note">选择后自动进入下一题</span>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section id="result" class="screen">
+      <div class="panel">
+        <div class="topbar">
+          <button class="back" data-go="mode">← 返回模式</button>
+          <div class="top-title">动物性格人格分析报告</div>
+        </div>
+        <div class="result-wrap">
+          <div class="result-hero">
+            <div id="resultEmoji" class="result-animal"></div>
+            <div>
+              <div id="resultLabel" class="result-label">你的动物性格原型是</div>
+              <h1 id="resultName" class="result-name"></h1>
+              <div id="resultTitle" class="result-title"></div>
+              <p id="resultQuote" class="result-quote"></p>
+              <div id="resultKeywords" class="keyword-row"></div>
+            </div>
+          </div>
+
+          <div id="quickUpgrade" class="upgrade-card hidden">
+            <div>
+              <strong>想知道更真实、更细的你？</strong>
+              <p>60题完整版会补齐你在关系、风险、边界、变化与行动节奏中的细分表现，动物匹配也会更精准。</p>
+            </div>
+            <button class="btn" data-go="unlock">解锁60题完整报告</button>
+          </div>
+
+          <div id="fullReport" class="result-grid">
+            <div class="report-card">
+              <h3>七维性格图谱</h3>
+              <svg id="radar" class="radar" viewBox="0 0 360 340" aria-label="性格维度雷达图"></svg>
+              <div id="dimensionList" class="dimension-list"></div>
+            </div>
+            <div style="display:grid;gap:16px;">
+              <div class="report-card">
+                <h3>你的森林底色</h3>
+                <p id="resultDesc"></p>
+                <div id="secondaryMatch" class="secondary-match"></div>
+              </div>
+              <div class="report-card">
+                <h3>你天然擅长的事</h3>
+                <ul id="resultStrengths"></ul>
+              </div>
+              <div class="report-card">
+                <h3>需要留意的盲区</h3>
+                <ul id="resultRisks"></ul>
+              </div>
+            </div>
+          </div>
+
+          <div id="fullAdvice" class="report-card" style="margin-top:16px;">
+            <h3>给你的成长建议</h3>
+            <p id="resultAdvice"></p>
+          </div>
+
+          <div id="deepReport" class="deep-report">
+            <section class="report-card wide">
+              <h3>详细性格分析</h3>
+              <p id="detailedAnalysis"></p>
+              <div id="dimensionInsights" class="insight-grid"></div>
+            </section>
+            <section class="report-card">
+              <h3>职业与学习建议</h3>
+              <p id="workStyle"></p>
+              <div id="careerDirections" class="keyword-row"></div>
+            </section>
+            <section class="report-card">
+              <h3>适合你的协作方式</h3>
+              <p id="collaborationAdvice"></p>
+            </section>
+            <section class="report-card wide">
+              <h3>把优势用出来的三步</h3>
+              <div id="growthRoute" class="route-list"></div>
+            </section>
+          </div>
+
+          <div class="result-actions">
+            <button id="shareResult" class="btn hidden">分享我的报告</button>
+            <button id="copyResult" class="btn">复制结果文案</button>
+            <button id="printResult" class="btn secondary">保存报告</button>
+            <button class="btn secondary" data-go="atlas">查看动物图鉴</button>
+            <button class="btn secondary" data-go="mode">重新测试</button>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section id="unlock" class="screen">
+      <div class="panel">
+        <div class="topbar">
+          <button class="back" data-go="result">← 返回结果</button>
+          <div class="top-title">60题完整测试</div>
+        </div>
+        <div class="content">
+          <div class="badge">完整版报告</div>
+          <h1 style="font-size:clamp(38px,5vw,64px);">你的动物性格<br>还没完全展开</h1>
+          <p class="sub">20题初测只看见了你的主要性格轮廓。60题完整版会从本能、关系、领地、风险、变化与归途六个阶段，生成更完整、更精准的动物人格分析。</p>
+          <div class="mode-grid" style="margin-top:32px;">
+            <div class="mode" style="cursor:default;">
+              <strong>完整版包含</strong>
+              <span>60道森林情境题、七维性格图谱、主动物与隐藏特质、优势、盲区与成长建议。</span>
+              <div class="tags"><i class="tag">完整报告</i><i class="tag">可分享</i></div>
+            </div>
+            <div class="mode" style="cursor:default;">
+              <strong>购买后获得</strong>
+              <span>进入完整测试的专属链接。完成后可以生成自己的报告链接，分享给朋友进行20题初测。</span>
+              <div class="tags"><i class="tag">购买后解锁</i><i class="tag">立即可测</i></div>
+            </div>
+          </div>
+          <div class="actions">
+            <button id="purchaseBtn" class="btn">去小红书购买完整版</button>
+            <button class="btn secondary" data-go="mode">先重新做20题初测</button>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section id="atlas" class="screen">
+      <div class="panel">
+        <div class="topbar">
+          <button class="back" data-go="result">← 返回报告</button>
+          <div class="top-title">20种动物人格图鉴</div>
+        </div>
+        <div class="content">
+          <div class="badge">动物图鉴</div>
+          <h1 style="font-size:clamp(31px,4vw,46px);">森林里的20种性格原型</h1>
+          <p class="sub atlas-intro">动物原型没有好坏之分，它描述的是你更自然的行动方式、关系距离与安全感来源。</p>
+          <div id="atlasGrid" class="atlas-grid"></div>
+        </div>
+      </div>
+    </section>
+  </main>
+  <button id="soundToggle" class="sound-toggle" type="button" aria-pressed="false" title="开启森林音"><span>♪</span><span id="soundText">开启森林音</span></button>
+  <div id="toast" class="toast">已复制</div>
+
+  <script>
+    const $ = (id) => document.getElementById(id);
+    const dimensions = [
+      ["control", "掌控感"], ["strategy", "策略性"], ["connection", "联结度"],
+      ["adaptability", "灵活性"], ["security", "安全感"], ["sensitivity", "感知力"], ["empathy", "共情力"]
+    ];
+
+    const profiles = {
+      leader:     [ 2, 1, 1,-1,-1,-1, 0],
+      observer:   [-1, 2,-1,-1, 2, 1, 0],
+      connector:  [ 0,-1, 2, 1, 1, 1, 2],
+      explorer:   [ 1,-1, 0, 2,-2, 1, 0],
+      guardian:   [ 1, 1, 1,-1, 2,-1, 2],
+      creator:    [ 0,-1, 0, 1, 0, 2, 1],
+      strategist: [ 1, 2,-1,-1, 1,-1,-1],
+      healer:     [-1, 0, 1,-1, 2, 1, 2],
+      wanderer:   [-1,-1,-2, 2,-2, 1,-1],
+      challenger: [ 2, 0, 0, 1,-2,-1,-1],
+      performer:  [ 1,-1, 2, 2,-1, 2, 1],
+      builder:    [ 0, 2, 0,-1, 2,-1, 0]
+    };
+
+    const rawQuestions = [
+      ["第一章 · 入林","dawn","🌲","你在黄昏时走进一片陌生森林，第一眼吸引你的是？",[["远处一束穿过树冠的金色光线","creator"],["树影深处传来的细微脚步声","observer"],["一条被落叶覆盖、看不清尽头的小路","explorer"],["林中空地上正在燃烧的一堆篝火","connector"]]],
+      ["第一章 · 入林","grove","🍃","四条小径同时出现在脚下，你更想走哪一条？",[["有清楚路标、通向森林中心的路","builder"],["长满苔藓、几乎没人走过的路","wanderer"],["能听见谈笑声和铃铛声的路","connector"],["向上延伸、可以看见全局的路","strategist"]]],
+      ["第一章 · 入林","twilight","🐾","你发现一串刚留下的爪印，会怎么做？",[["先判断大小、速度和离开的方向","observer"],["沿着爪印追上去看看","explorer"],["绕开它，给彼此留出距离","healer"],["在旁边留下自己的痕迹作为回应","leader"]]],
+      ["第一章 · 入林","grove","🪶","如果必须在入口留下一个标记，你会留下？",[["一道清楚的爪痕，说明我来过","leader"],["一片摆好的羽毛，只有懂的人能看懂","creator"],["一个可供后来者辨认的方向标","guardian"],["什么都不留，让风抹去痕迹","wanderer"]]],
+      ["第一章 · 入林","dawn","🌳","一棵古树允许你问一个问题，你最想问？",[["这片森林真正的规则是什么","strategist"],["哪里最安全，能安稳生活","builder"],["谁最了解这里，可以带我认识它","connector"],["森林边界之外还有什么","explorer"]]],
+      ["第一章 · 入林","twilight","🌫️","雾突然变浓，你只能依靠一种感觉前进，你会选？",[["脚下地面的起伏和方向","builder"],["风里细微的气味与声音","observer"],["心里最强烈的直觉","creator"],["远处同伴发出的回应","connector"]]],
+      ["第一章 · 入林","grove","🍎","你看到一颗从未见过的果实，颜色十分诱人，你会？",[["观察附近有没有动物吃过的痕迹","observer"],["只尝一小口，边试边判断","explorer"],["带回去和熟悉的人一起研究","guardian"],["直接摘下，相信自己的判断","challenger"]]],
+      ["第一章 · 入林","water","💧","一条湍急的河挡住去路，你更可能？",[["寻找最稳的浅滩，慢慢过去","builder"],["沿河走，找到更聪明的绕行路线","strategist"],["呼唤附近的动物一起搭桥","connector"],["踩着石头快速跃过","challenger"]]],
+      ["第一章 · 入林","ridge","🕊️","一只鸟似乎在为你带路，但方向与你原计划相反，你会？",[["跟它走，意外往往藏着答案","explorer"],["保持原计划，不轻易改变路线","builder"],["先跟一小段，确认它的意图","observer"],["用自己的方式和它建立联系","performer"]]],
+      ["第一章 · 入林","grove","🗿","林中空地立着一座无名动物石像，你第一反应是？",[["研究它的姿态和留下的符号","strategist"],["靠近触摸，感受它带来的情绪","creator"],["想知道是谁把它放在这里","connector"],["绕着四周检查有没有隐藏机关","observer"]]],
+
+      ["第二章 · 夜宿","night","🌙","夜色降下后，你必须选择一个地方过夜，你会选？",[["高处的树枝，可以观察四周","strategist"],["靠近水源的草地，安静又开阔","creator"],["隐蔽洞穴，不容易被发现","observer"],["有其他动物停留的地方","connector"]]],
+      ["第二章 · 夜宿","night","🐺","森林深处传来一声陌生低吼，你的第一反应是？",[["停下脚步，判断声音来自哪里","observer"],["靠近一点，确认对方是什么","explorer"],["寻找掩护，不让自己暴露","healer"],["发出回应，让对方知道我在这里","leader"]]],
+      ["第二章 · 夜宿","fire","🔥","篝火突然熄灭，四周瞬间漆黑，你会先做什么？",[["马上重新点火，恢复秩序","leader"],["让所有人靠拢，确认彼此都在","guardian"],["安静听一会儿，判断黑暗里的变化","observer"],["适应黑暗，继续做原本的事","wanderer"]]],
+      ["第二章 · 夜宿","stars","💭","梦里有一只动物反复看着你，却不说话，你会？",[["试着理解它眼神里的情绪","healer"],["问它想带我去哪里","explorer"],["等它先行动，不急着靠近","observer"],["主动告诉它我是谁","performer"]]],
+      ["第二章 · 夜宿","night","☁️","乌云遮住月亮，你失去了方向感，会依靠什么？",[["记忆里的地形和来时路线","strategist"],["同伴之间约定好的信号","guardian"],["自己的直觉和身体感受","creator"],["继续移动，边走边重新定位","explorer"]]],
+      ["第二章 · 夜宿","rain","🌧️","深夜突降大雨，你搭好的住处开始漏水，你会？",[["立刻加固，把所有漏洞处理掉","builder"],["换到新的地方，不和天气硬耗","explorer"],["先照顾更怕冷的同伴","healer"],["把漏水的位置变成收集雨水的装置","creator"]]],
+      ["第二章 · 夜宿","night","👣","脚步声一直绕着你的住处打转，却不靠近，你会？",[["走出去直接问清楚","challenger"],["设计一个方法确认对方身份","strategist"],["保持安静，让对方先失去耐心","observer"],["留下食物，释放友好信号","connector"]]],
+      ["第二章 · 夜宿","cave","🌉","你必须经过一座看不清尽头的旧木桥，你会？",[["一步步测试承重再往前","builder"],["第一个过去，给别人做示范","leader"],["和大家保持间距依次通过","guardian"],["寻找桥下或旁边的新路线","wanderer"]]],
+      ["第二章 · 夜宿","stars","❄️","夜里越来越冷，而你只有一张足够一人使用的毯子，你会？",[["和身边的人一起盖，挤一点也可以","connector"],["让最需要的人使用","healer"],["自己先保持体力，明天才能解决问题","strategist"],["拆开改造成几件简单保暖物","creator"]]],
+      ["第二章 · 夜宿","dawn","🌤️","天快亮时，你获得一个提前出发的机会，你会？",[["独自上路，享受清晨的安静","wanderer"],["叫醒大家，一起看到第一束光","connector"],["先探一段路，再回来告诉大家","guardian"],["继续休息，按原计划出发","builder"]]],
+
+      ["第三章 · 同伴","grove","🩹","路边有一只受伤的陌生动物，你会怎么做？",[["马上停下处理伤口","healer"],["先确认周围安全，再决定怎么帮","observer"],["叫来更多同伴一起想办法","connector"],["留下药草和路线提示，不打扰它","guardian"]]],
+      ["第三章 · 同伴","fire","🤝","一个陌生群体邀请你加入篝火晚餐，你会？",[["自然加入，很快和大家聊起来","performer"],["先在边缘观察一会儿","observer"],["礼貌接受，但不会停留太久","wanderer"],["主动帮忙分配食物和位置","leader"]]],
+      ["第三章 · 同伴","grove","🥜","食物不够所有人吃饱，你倾向怎样分配？",[["按照每个人实际需要来分","healer"],["平均分，规则最省争议","builder"],["优先保证能继续寻找食物的人","strategist"],["先让大家说出想法，再共同决定","connector"]]],
+      ["第三章 · 同伴","storm","🗣️","同伴对路线发生激烈争执，你通常会？",[["迅速做决定，让队伍继续前进","leader"],["梳理信息，找出最可行的方案","strategist"],["照顾双方情绪，让关系先缓和","healer"],["提出一个大家都没想过的新选项","creator"]]],
+      ["第三章 · 同伴","twilight","🦔","新加入的动物一直沉默，也不参与讨论，你会？",[["给它空间，等它自己准备好","healer"],["私下主动和它聊聊","connector"],["观察它的行动，比语言更可靠","observer"],["安排一个具体任务让它参与","leader"]]],
+      ["第三章 · 同伴","rain","🧭","同行者在雾里走散了，你第一步会？",[["留在约定地点，按规则等待","builder"],["沿痕迹立即返回寻找","guardian"],["登上高处发出明显信号","leader"],["判断它最可能做出的选择","strategist"]]],
+      ["第三章 · 同伴","night","🔐","同伴告诉你一个不能对外说的秘密，你会？",[["守住它，除非涉及真正的危险","guardian"],["先理解它为什么只告诉我","healer"],["分析这个秘密会带来哪些影响","strategist"],["不多问，也不会让它改变彼此距离","wanderer"]]],
+      ["第三章 · 同伴","ridge","👑","队伍的带领者突然消失，所有人看向你，你会？",[["接过位置，先稳定现场","leader"],["推举最合适的人，不一定是自己","strategist"],["让每个人分担一部分决定","connector"],["负责侦察，但不想成为中心","observer"]]],
+      ["第三章 · 同伴","fire","🎉","大家找到新营地，准备庆祝，你通常是？",[["最先把气氛带起来的人","performer"],["安静看大家开心也很满足","healer"],["提前把食物、火和安全安排好","guardian"],["庆祝一会儿就去探索周围","explorer"]]],
+      ["第三章 · 同伴","twilight","🍂","到了必须离开熟悉群体的时候，你会？",[["认真告别，留下以后联系的方式","connector"],["悄悄离开，不想把离别放大","wanderer"],["把后续安排清楚再走","guardian"],["期待新的路，离开得很干脆","explorer"]]],
+
+      ["第四章 · 领地","cave","🐾","你回到住处，发现入口有陌生动物的痕迹，你会？",[["加强边界，让对方知道这里有主人","leader"],["分析痕迹，判断对方来意","observer"],["换一个更隐蔽的新住处","wanderer"],["留下友好但清晰的回应","guardian"]]],
+      ["第四章 · 领地","ridge","🚧","另一个群体想从你的领地借道，你会？",[["谈清规则后允许通过","strategist"],["只要没有恶意就欢迎","connector"],["拒绝，领地边界不能模糊","challenger"],["带他们走一条不影响核心区域的路","guardian"]]],
+      ["第四章 · 领地","water","⛲","旱季里只剩一处泉眼，你会如何处理？",[["制定轮流使用的规则","builder"],["优先给最弱小的动物","healer"],["寻找新的水源，减少争夺","explorer"],["守住泉眼，交换等价资源","strategist"]]],
+      ["第四章 · 领地","storm","⚠️","有人无视你的警告，反复越过边界，你会？",[["当面制止，不再给模糊空间","challenger"],["重新说明边界和后果","leader"],["减少接触，主动拉开距离","wanderer"],["弄清它为什么一直这样做","healer"]]],
+      ["第四章 · 领地","cave","🪤","你发现一处明显针对动物的陷阱，会？",[["立即破坏，避免任何人受伤","guardian"],["研究布置方式，追踪设置者","strategist"],["在周围留下醒目的危险标记","leader"],["改变它，让陷阱反过来暴露设置者","creator"]]],
+      ["第四章 · 领地","ridge","🦁","有人公开质疑带领者的决定，你更认同？",[["任何权威都应该接受挑战","challenger"],["先看质疑有没有事实依据","observer"],["公开场合先维持秩序，之后再谈","guardian"],["让双方把理由完整说出来","connector"]]],
+      ["第四章 · 领地","night","🍇","储存的食物少了一部分，你发现是熟悉的同伴拿的，你会？",[["直接问清楚，不让猜测继续","leader"],["先了解它是不是遇到困难","healer"],["调整储存方式，避免再次发生","builder"],["观察一段时间，确认是不是第一次","observer"]]],
+      ["第四章 · 领地","grove","🪵","你更喜欢怎样标记自己的领地？",[["清楚、稳定，让所有人都能看懂","builder"],["自然融入环境，不必太明显","creator"],["只在关键位置留下警示","strategist"],["不固定领地，重要的是随时能离开","wanderer"]]],
+      ["第四章 · 领地","storm","🐅","面对明显比你强大的竞争者，你会？",[["寻找它的弱点，选择合适时机","strategist"],["正面回应，不先否定自己","challenger"],["避开无意义竞争，保存能量","observer"],["尝试把竞争变成合作","connector"]]],
+      ["第四章 · 领地","fire","🪺","为了保护一窝幼崽，你只能承担一种角色，你会选？",[["站在最前面抵挡危险","guardian"],["设计最安全的撤离路线","strategist"],["安抚幼崽，让它们保持安静","healer"],["引开危险，为大家争取时间","challenger"]]],
+
+      ["第五章 · 变局","water","🌊","洪水突然改变了熟悉的森林，你会先？",[["迅速寻找新的高地和路线","explorer"],["集合熟悉的伙伴一起转移","guardian"],["观察水势，判断变化会持续多久","observer"],["利用漂浮木材搭建临时通道","creator"]]],
+      ["第五章 · 变局","fire","🔥","远处出现山火，风向还不确定，你会？",[["立即撤离，不把时间用在犹豫上","challenger"],["计算风向和地形再选择路线","strategist"],["先通知尽可能多的动物","connector"],["带着弱小成员按稳妥路线移动","guardian"]]],
+      ["第五章 · 变局","twilight","🍁","季节突然提前变化，你最在意什么？",[["储备是否足够度过寒冷","builder"],["新的季节会出现什么机会","explorer"],["周围伙伴能否适应变化","healer"],["环境里那些细微而美丽的改变","creator"]]],
+      ["第五章 · 变局","stars","🔔","森林出现从未听过的声音，你会把它理解成？",[["需要调查的新信号","observer"],["可能改变秩序的警告","strategist"],["一种邀请，催我去未知之地","explorer"],["森林在表达某种情绪","creator"]]],
+      ["第五章 · 变局","rain","🗺️","你一直依赖的旧地图突然失效了，你会？",[["边走边绘制一张新的地图","builder"],["寻找熟悉当地的动物合作","connector"],["不再依赖地图，训练自己的感知","wanderer"],["从旧地图里找仍然成立的规律","strategist"]]],
+      ["第五章 · 变局","ridge","🦋","必须迁往完全陌生的地方，你最先准备？",[["了解当地规则和潜在风险","observer"],["带上能带来安全感的熟悉物品","healer"],["提前建立新的联系网络","connector"],["轻装出发，把空间留给未知","explorer"]]],
+      ["第五章 · 变局","dawn","✨","森林赐予你一种新能力，你更想要？",[["看见每条选择可能带来的后果","strategist"],["听懂所有动物没有说出口的话","healer"],["瞬间到达任何想去的地方","wanderer"],["让大家愿意跟随你的声音","performer"]]],
+      ["第五章 · 变局","twilight","👁️","如果暂时失去一种熟悉的感官，你会？",[["发展其他感官，重新建立判断","observer"],["依靠可信任的同伴","connector"],["把它当成一次不同的体验","creator"],["制定更谨慎的行动规则","builder"]]],
+      ["第五章 · 变局","cave","🚪","山壁突然打开一扇只出现一次的门，你会？",[["毫不犹豫走进去","challenger"],["先观察门后的光、气味和声音","observer"],["叫上重要的人一起进入","connector"],["记下位置，确认退路后再进","strategist"]]],
+      ["第五章 · 变局","stars","💎","森林愿意实现一个愿望，但要交换你珍视的东西，你会？",[["拒绝，重要的东西不能被定价","guardian"],["先弄清交换的全部规则","strategist"],["如果愿望能帮助很多人，我会考虑","healer"],["接受，真正想要的值得冒险","challenger"]]],
+
+      ["第六章 · 归途","water","🪞","湖面映出的不是外表，而是你的性格，你希望看到？",[["坚定而清楚，不轻易被影响","leader"],["温柔但有边界，能理解别人","healer"],["自由敏锐，始终保持好奇","explorer"],["安静深刻，能看见复杂真相","observer"]]],
+      ["第六章 · 归途","stars","🧠","离开森林前只能带走一段记忆，你会选？",[["和重要同伴围在篝火旁的夜晚","connector"],["第一次独自找到方向的瞬间","wanderer"],["看见森林全貌的那一刻","strategist"],["被陌生动物信任和依靠的经历","guardian"]]],
+      ["第六章 · 归途","dawn","🐾","如果可以自己选择一种动物身份，你更在意？",[["它是否有足够强的生存能力","challenger"],["它是否自由，不被固定领地困住","wanderer"],["它能否与群体建立深厚关系","connector"],["它是否拥有独特的感知方式","creator"]]],
+      ["第六章 · 归途","grove","🎁","你想给森林留下最后一件东西，会是？",[["一套能长期运转的规则","builder"],["一个所有动物都能休息的地方","guardian"],["一段会被反复传唱的故事","performer"],["一条通向更远处的新路","explorer"]]],
+      ["第六章 · 归途","twilight","💬","你希望森林里的同伴怎样记住你？",[["遇到问题时总能想到办法的人","strategist"],["在身边时让人感到安心的人","healer"],["敢于站出来、带大家前进的人","leader"],["让平常日子变得有趣的人","performer"]]],
+      ["第六章 · 归途","night","🕳️","在森林最深处，你最不想面对的是？",[["失去对自己生活的掌控","leader"],["被重要的人误解或抛下","healer"],["一眼就能看到尽头的重复生活","explorer"],["在没有准备时被迫改变","builder"]]],
+      ["第六章 · 归途","ridge","🪽","对你来说，真正的自由更像？",[["随时可以选择离开或重新开始","wanderer"],["有能力承担自己做出的选择","leader"],["不必隐藏真实感受和想法","creator"],["和信任的人在一起也不失去自己","guardian"]]],
+      ["第六章 · 归途","grove","🏡","哪一种地方最像你心里的家？",[["边界清楚、物品各有位置的巢穴","builder"],["大家随时可以回来相聚的营地","connector"],["远离喧闹、只属于自己的树洞","observer"],["窗外每天都有新风景的临时住处","explorer"]]],
+      ["第六章 · 归途","dawn","🌅","最后一次日出照进森林，你会站在哪里看？",[["最高的山脊，俯瞰整片森林","strategist"],["熟悉的伙伴中间，一起等待光亮","connector"],["安静的水边，让光落在身上","creator"],["通往森林外的路口，准备出发","wanderer"]]],
+      ["第六章 · 归途","twilight","🌬️","森林在背后最后一次呼唤你，你会？",[["回头认真告别，再继续向前","healer"],["停下记住这一刻，但不回头","observer"],["大声回应，让森林知道我听见了","performer"],["相信未来还会回来，不把离开当结束","explorer"]]]
+    ];
+
+    const allQuestions = rawQuestions.map(([chapter, scene, icon, text, options]) => ({
+      chapter, scene, icon, text,
+      options: options.map(([label, profile]) => ({ label, profile }))
+    }));
+    const quickIndexes = [0,3,6,9,12,15,18,21,24,27,30,33,36,39,42,45,48,51,54,57];
+
+    const animals = [
+      {name:"狼",emoji:"🐺",title:"边界清晰的长期主义者",keywords:["独立","忠诚","有原则"],vector:[66,76,46,48,58,48,60],quote:"你不急着融入所有群体，但会认真守住真正认定的人。",desc:"你习惯先观察环境，再决定靠近还是保持距离。外表可能安静克制，内在却有稳定的原则和很强的责任感。你重视长期信任，不喜欢关系忽冷忽热，也不愿为了被接纳而牺牲自己的边界。",strengths:["能在复杂环境里保持判断，不轻易随风摇摆","对认定的人和目标有持续投入的能力","既能独立行动，也懂得在关键时刻保护群体"],risks:["过度独自消化问题，让别人误以为你不需要支持","标准较高，失望后容易直接拉开距离"],advice:"真正稳定的边界不是把所有人挡在外面，而是让合适的人知道怎样靠近你。试着更早表达需求和不舒服，很多关系不必等到失望以后才调整。"},
+      {name:"狐狸",emoji:"🦊",title:"灵活敏锐的策略探索者",keywords:["机敏","会变通","好奇"],vector:[55,84,43,83,42,65,48],quote:"你很少只看眼前的一条路，总能发现被忽略的出口。",desc:"你对环境变化非常敏感，擅长迅速理解规则，再找到更省力、更巧妙的方式。你既有好奇心，也不会盲目冒险；看似随性，很多时候其实已经在心里预演过几种可能。",strengths:["信息抓取快，能迅速找到问题的关键变量","适应变化，不会被一种做法困住","有幽默感和分寸感，知道什么时候进、什么时候退"],risks:["选择太多时容易反复比较，推迟真正投入","为了保持灵活，偶尔会让人觉得态度不够明确"],advice:"你的聪明在明确目标之后最有力量。遇到重要选择时，给自己一个截止点：信息达到七成就行动，剩下的答案交给过程。"},
+      {name:"狮子",emoji:"🦁",title:"自带主心骨的行动领袖",keywords:["果断","担当","影响力"],vector:[88,61,70,52,35,38,54],quote:"当大家还在犹豫时，你往往已经站到了需要负责的位置。",desc:"你天然关注方向、秩序和结果，遇到混乱时会下意识承担主导角色。你愿意保护团队，也希望自己的判断被认真对待。对你而言，存在感并不是热闹，而是能在关键时刻产生影响。",strengths:["决定快、执行强，能把分散的人拉回共同目标","面对压力不容易退缩，敢于承担后果","有保护意识，愿意为重要的人和事情出头"],risks:["推进过快时可能忽略他人还没说出口的顾虑","习惯表现坚强，容易把疲惫藏到最后"],advice:"真正有力量的领导感，不只来自给答案，也来自让别人参与答案。重大决定前多问一句“你怎么看”，反而会让你的影响力更稳。"},
+      {name:"棕熊",emoji:"🐻",title:"稳定可靠的森林守护者",keywords:["稳重","耐力","可靠"],vector:[68,56,42,28,84,38,66],quote:"你不追求最快抵达，但会把一路上的人和事安稳带到终点。",desc:"你重视可持续、可信赖和真正落地的安全感。面对变化，你更愿意先站稳脚下，再一步步解决。别人容易在你身边放松，因为你不轻易许诺，但答应的事情通常会做到。",strengths:["耐力好，适合处理需要长期坚持的事情","面对危机能稳住节奏，不被情绪带跑","务实可靠，擅长把抽象计划变成可执行步骤"],risks:["适应新变化需要时间，可能错过一些短暂机会","习惯照顾全局，容易把自己的消耗放在最后"],advice:"稳定不是永远不动，而是知道什么值得守、什么可以换。给生活保留一小块试错空间，你会发现变化不一定会破坏安全感。"},
+      {name:"兔子",emoji:"🐰",title:"高敏锐度的温柔观察者",keywords:["细腻","谨慎","反应快"],vector:[28,44,61,68,86,74,84],quote:"你总能比别人更早察觉空气里的变化，也更珍惜来之不易的安心。",desc:"你对情绪、气氛和风险的感受都很细。你不是胆小，而是接收的信息比很多人更多，因此会自然评估环境是否值得信任。安全时的你灵动、有趣，能给亲近的人带来柔软而真诚的陪伴。",strengths:["能捕捉细微情绪和潜在风险","反应迅速，遇到变化能及时调整","温柔但不迟钝，懂得保护自己和在意的人"],risks:["长期处在高警觉中，容易提前为尚未发生的事消耗","不舒服时倾向回避，别人可能不知道问题在哪里"],advice:"敏感是你的雷达，不是必须服从的警报。先问自己“现在真的危险，还是我在预防危险”，再决定靠近或离开。"},
+      {name:"鹿",emoji:"🦌",title:"细腻有原则的共情者",keywords:["温柔","审美","有分寸"],vector:[36,50,62,55,70,88,90],quote:"你温柔地感受世界，也安静地坚持自己认为美好的东西。",desc:"你对人和环境都有细腻的感受力，既能读懂别人的情绪，也有自己的审美与价值标准。你不喜欢强硬争夺，更擅长用真诚、分寸和长期一致性影响周围。",strengths:["共情力强，能让别人感到被理解和尊重","审美与感受细腻，善于创造舒适氛围","温和却有原则，不轻易伤害别人也不愿违背内心"],risks:["太顾及他人感受时，容易延后自己的真实需求","面对直接冲突可能反复内耗"],advice:"温柔和坚定并不冲突。把拒绝说得清楚，并不会破坏你的善意；它只是让善意有了可以长期存在的边界。"},
+      {name:"鹰",emoji:"🦅",title:"目标清晰的远见者",keywords:["远见","专注","独立"],vector:[80,88,28,54,38,46,34],quote:"你习惯先飞到高处看清全局，再决定把力量投向哪里。",desc:"你重视方向、效率和长期价值，不容易被眼前噪音牵着走。你可以长时间独立思考，也敢在看准之后迅速行动。对你来说，真正的安全来自看清局势并保有选择权。",strengths:["全局意识强，能从复杂信息中提炼主线","目标感清晰，不容易被短期情绪干扰","适合独立负责重要任务，在压力下保持判断"],risks:["长期站在高处分析，可能忽略近处的情感细节","对低效率容忍度低，容易显得距离感强"],advice:"远见需要地面的反馈来校准。把阶段目标讲给可信任的人听，听见不同视角不会削弱你的判断，反而能减少盲区。"},
+      {name:"乌鸦",emoji:"🐦‍⬛",title:"洞察复杂性的深度思考者",keywords:["洞察","理性","独特"],vector:[55,91,38,70,42,82,42],quote:"别人看见表面，你更容易注意到规律、矛盾和被遗漏的线索。",desc:"你对复杂问题有天然耐心，喜欢理解事物为什么如此，而不满足于现成结论。你可能有些不按常规，却常能把看似无关的线索连成新的答案。",strengths:["擅长研究、归纳和识别隐藏规律","能够容纳复杂性，不急着做简单判断","观点独立，常能提出有启发的新解释"],risks:["想得太深时容易与现实行动脱节","表达省略过多，别人可能跟不上你的思路"],advice:"把洞察变成别人能接住的语言。先讲结论，再讲最关键的两条依据，会让你的深度真正转化成影响力。"},
+      {name:"天鹅",emoji:"🦢",title:"克制而有审美的理想主义者",keywords:["优雅","标准感","理想"],vector:[56,54,58,38,68,94,72],quote:"你希望事情不只正确，也能以舒服、体面的方式发生。",desc:"你对品质、氛围和表达方式有较高要求。你不一定高调，却很在意生活是否符合内心的秩序和美感。你愿意维持体面，也珍惜少数真正同频的关系。",strengths:["审美和完成度意识强，能提升整体体验","自我约束力好，在复杂场合保持分寸","对关系有品质要求，重视真诚和相互尊重"],risks:["标准过高时容易迟迟不愿交付不完美的结果","为了维持体面，把真实不满压得太久"],advice:"允许一些事情先以七十分出现，再慢慢接近理想。真实比无瑕更有生命力，适度暴露不完美也会让关系更靠近。"},
+      {name:"狗狗",emoji:"🐶",title:"忠诚热烈的关系建立者",keywords:["真诚","可靠","重感情"],vector:[54,43,91,55,68,42,92],quote:"你最珍贵的能力，是让人感到自己不是独自面对这片森林。",desc:"你重视陪伴、信任和明确的情感回应。喜欢一个人或一个群体时，你会投入真实行动，并希望彼此关系稳定、坦诚。你的热烈不是没有原则，而是愿意认真对待连接。",strengths:["关系投入真诚，能长期维护信任","乐于合作，擅长把分散的人连接起来","对他人的状态敏感，关键时刻愿意出现"],risks:["过度重视回应时，容易把别人的冷淡解释成否定","为了维持关系，偶尔答应超出能力的事情"],advice:"忠诚也应该包括对自己忠诚。先确认“我真的愿意吗”，再答应别人；好的关系不会只靠你一个人维持。"},
+      {name:"水豚",emoji:"🦫",title:"松弛稳定的氛围调节者",keywords:["包容","松弛","稳定"],vector:[30,36,84,45,78,56,94],quote:"你不急着证明什么，却能让紧绷的人在身边慢慢放松。",desc:"你天生不喜欢无谓对抗，能包容不同节奏和性格。你擅长在复杂关系里保持平和，也常用不评判的态度给别人安全感。你的力量柔软，却很稳定。",strengths:["情绪稳定，能降低群体里的紧张感","接纳度高，容易和不同类型的人相处","懂得享受当下，不轻易被竞争节奏绑架"],risks:["为了避免冲突，可能把自己的立场放得太后","太能适应环境时，容易忽略自己真正想要什么"],advice:"松弛不等于什么都可以。练习在小事上明确偏好，让别人知道你的“可以”和“不可以”，你的温和会因此更有分量。"},
+      {name:"鲸",emoji:"🐋",title:"深层感受的安静承载者",keywords:["深沉","包容","内在丰富"],vector:[42,72,30,26,68,88,91],quote:"你的世界安静而辽阔，很多感受需要足够深的水才能被听见。",desc:"你拥有丰富而深层的内在世界，不习惯把所有情绪立刻说出来。你能承载复杂感受，也愿意长期理解重要的人。独处对你不是逃避，而是恢复和整理自我的方式。",strengths:["情感容量大，能理解人和关系的复杂面","思考深入，适合需要沉浸和长期积累的事情","安静可靠，能给亲近的人提供稳定支持"],risks:["情绪积累太深时，别人往往到很晚才发现你在难受","独处过久可能让需要被理解的部分更加封闭"],advice:"不必等到完全想清楚才表达。先说“我现在有点难受，但还没整理好”，就是给关系留下一条能靠近你的通道。"},
+      {name:"海豚",emoji:"🐬",title:"聪明外向的快乐连接者",keywords:["灵动","社交","共情"],vector:[62,58,93,78,42,72,88],quote:"你能快速读懂场域，也知道怎样让人与人之间流动起来。",desc:"你思维灵活、表达自然，对关系里的反馈十分敏锐。你喜欢共享快乐，也能在轻松外表下准确识别情绪。群体里的你常是连接信息、活跃气氛和化解尴尬的人。",strengths:["沟通反应快，能迅速找到共同语言","社交感知强，懂得照顾群体体验","学习和适应速度快，能在变化中保持活力"],risks:["太习惯活跃气氛，可能把自己的低落藏起来","外界反馈过多时，容易分散真正重要的注意力"],advice:"给自己保留不需要表演轻松的空间。真正亲近的人也应该认识安静、疲惫甚至没有答案的你。"},
+      {name:"鲨鱼",emoji:"🦈",title:"直接果断的目标执行者",keywords:["强执行","直接","竞争力"],vector:[91,70,22,68,22,26,18],quote:"你认准方向后会持续向前，很少把能量浪费在反复犹豫上。",desc:"你对目标、效率和胜负边界十分敏感。遇到问题更倾向直接处理，而不是长时间讨论情绪。你能够承受压力，也愿意在竞争环境里为自己争取位置。",strengths:["行动果断，适合推动高难度和高压力任务","目标聚焦，不容易被无关信息拖慢","边界明确，敢于处理别人回避的问题"],risks:["过度追求效率时，可能把情感需求当成干扰","持续向前容易忽略身体和心理已经需要休息"],advice:"快不等于必须一直用力。重要合作里，先花一分钟确认彼此的顾虑，往往能省下之后更多修复成本。"},
+      {name:"章鱼",emoji:"🐙",title:"多线程适应的聪明解题者",keywords:["多面","聪明","适应力"],vector:[48,92,36,94,40,78,53],quote:"环境一变，你就能换一种姿态继续解决问题。",desc:"你拥有很强的环境适应能力，能同时处理多条线索，并根据对象切换沟通方式。你不执着于固定身份，更在意是否能找到有效解法。",strengths:["学习迁移能力强，新环境中上手很快","擅长同时整合信息、资源和不同角色","思路开放，遇到阻碍能迅速换方法"],risks:["切换过多容易分散精力，缺少真正完成的满足感","适应别人太快，有时会模糊自己的核心立场"],advice:"给多线程能力设置一个主任务。每个阶段只定义一件必须完成的事，其余灵活性才不会变成持续消耗。"},
+      {name:"鹦鹉",emoji:"🦜",title:"表达鲜明的灵感传播者",keywords:["表达力","热情","感染力"],vector:[56,44,94,84,34,91,70],quote:"你不仅看见有趣的东西，还能让更多人一起看见。",desc:"你对新鲜信息、色彩、表达和群体反应都很敏感。你擅长把想法说得有画面感，让平常内容变得易懂、有趣、愿意被分享。",strengths:["表达感染力强，能快速吸引注意并传递情绪","灵感丰富，适合创作、传播和跨圈连接","对现场反馈敏感，能够快速调整表达方式"],risks:["容易被新鲜感带走，深度积累可能不够稳定","过度在意反馈时，会让真实表达变得摇摆"],advice:"把灵感装进稳定的容器。固定一个输出节奏和长期主题，你的感染力会从瞬间亮眼变成持续影响。"},
+      {name:"猫",emoji:"🐱",title:"独立松弛的边界美学家",keywords:["独立","有边界","松弛"],vector:[43,62,34,66,64,82,53],quote:"你愿意靠近，但靠近必须来自真实意愿，而不是被要求。",desc:"你重视自主感、舒适度和关系里的分寸。你对氛围和细节有自己的标准，不喜欢被过度安排。熟悉之后的你可以柔软、有趣，但需要足够的个人空间恢复能量。",strengths:["自我感清楚，知道什么适合自己","观察细致，能感受到环境和审美上的微妙差异","不盲目合群，关系选择更看重真实和质量"],risks:["不舒服时突然抽离，别人可能来不及理解原因","过度依赖自己，容易低估清楚表达需求的价值"],advice:"边界最理想的状态是可被理解，而不是只能被猜。提前说清你的节奏，能减少很多不必要的靠近与误会。"},
+      {name:"仓鼠",emoji:"🐹",title:"细致谨慎的安全建设者",keywords:["细致","规划","踏实"],vector:[24,62,50,38,94,56,66],quote:"你习惯为未来多准备一点，让日子在可控中慢慢变好。",desc:"你对资源、细节和潜在风险很敏感，喜欢提前准备、分类整理和建立稳定秩序。你不一定追求宏大目标，却很擅长把生活照顾得具体而可靠。",strengths:["计划和储备意识强，能防止小问题演变成危机","做事细致，适合需要耐心和准确度的任务","重视日常稳定，能给自己和身边人实际照顾"],risks:["准备过度时，容易迟迟不敢开始","对不确定性的担心会占据过多注意力"],advice:"为准备设置上限，例如“准备到七成就开始”。安全感除了来自储备，也来自你一次次应对变化后积累的信心。"},
+      {name:"猫鼬",emoji:"🦡",title:"反应迅速的风险侦察者",keywords:["机警","勇敢","行动快"],vector:[72,78,54,88,28,43,48],quote:"危险刚露出一点迹象，你已经开始寻找最有效的处理方式。",desc:"你警觉、利落，面对突发状况反而容易进入高效状态。你愿意站到前面确认风险，也能迅速把观察转化为行动。你不喜欢拖泥带水，更相信及时回应。",strengths:["临场反应快，突发事件中能迅速抓住重点","敢于验证风险，不容易被未知吓住","行动和判断衔接紧密，适合节奏快的任务"],risks:["长期保持警觉会让身心难以真正放松","太快进入解决模式，可能跳过别人需要被理解的阶段"],advice:"不是每个信号都需要立刻处理。建立“立即、稍后、忽略”三个等级，能让你的敏锐服务于生活，而不是占满生活。"},
+      {name:"浣熊",emoji:"🦝",title:"机灵实用的机会发现者",keywords:["会解决","接地气","灵活"],vector:[46,78,60,89,44,72,56],quote:"你擅长用手边已有的东西，拼出一个意想不到的答案。",desc:"你好奇、务实，对环境中的可用资源特别敏感。面对限制时，你不会只抱怨条件不足，而是很快研究“现在能怎么办”。你能在规则边缘找到空间，也愿意尝试非标准解法。",strengths:["资源整合能力强，能把有限条件用出新价值","解决问题务实，不容易被形式束缚","适应不同人和环境，生活感与行动力兼具"],risks:["太依赖临场解决，长期规划容易被往后放","对很多机会都感兴趣，可能出现精力摊薄"],advice:"把临场聪明沉淀成可以复用的方法。每解决一次问题，留下一条规则或模板，你会越来越轻松，而不是永远从头应对。"}
+    ];
+
+    // Replace this with your own Xiaohongshu product URL before selling.
+    const PURCHASE_URL = "";
+    const pageParams = new URLSearchParams(window.location.search);
+    const fullAccessEnabled = pageParams.get("full") === "1";
+    const screens = ["home", "mode", "quiz", "result", "unlock", "atlas"];
+    let activeQuestions = [];
+    let answers = [];
+    let index = 0;
+    let advancing = false;
+    let currentResult = null;
+    let testMode = "quick";
+    const chapterScene = {
+      "第一章 · 入林": "dawn",
+      "第二章 · 夜宿": "night",
+      "第三章 · 同伴": "fire",
+      "第四章 · 领地": "territory",
+      "第五章 · 变局": "storm",
+      "第六章 · 归途": "return"
+    };
+    const dimensionNarratives = {
+      control: {
+        high: "你在关键节点更愿意主动承担、拍板和推进。你不喜欢事情一直悬着，明确的方向会让你更有能量。",
+        mid: "你能在需要时站出来，也知道什么时候让别人发挥。你的掌控感更像一种稳住局面的能力。",
+        low: "你不急着站到最前面，更擅长先理解局势、找到适合自己的位置，再用自己的方式产生影响。"
+      },
+      strategy: {
+        high: "你会自然地看规则、看后果、看长期路径。面对复杂问题时，你的优势是先把线索理清，再决定往哪里走。",
+        mid: "你既能顾及现实步骤，也不会把所有事情都变成过度规划，能够在判断与行动之间取得平衡。",
+        low: "你更依赖现场感受和直接体验。真正适合你的方法不是强迫自己做满计划，而是设置清晰的下一步。"
+      },
+      connection: {
+        high: "关系和群体反馈会显著影响你的状态。你适合在有真实互动、能互相支持的环境里把能力发挥得更好。",
+        mid: "你既享受连接，也需要自己的节奏。选择少而稳定的关系，比强行维持热闹更适合你。",
+        low: "你很重视独立空间，习惯自己消化和推进。高质量协作对你来说，需要清楚边界和明确目标。"
+      },
+      adaptability: {
+        high: "变化不会轻易打乱你，反而容易激发你的解题能力。你擅长在没有标准答案时寻找可行的新路径。",
+        mid: "你能接受必要变化，也重视稳定基础。先搭好框架再尝试新方向，会是你最舒服的节奏。",
+        low: "熟悉感和可预期性会让你更有力量。面对变化时，先把信息、资源和退路准备好，你会适应得很好。"
+      },
+      security: {
+        high: "你需要可预期的节奏、可信任的人和能落地的准备。安全感不是束缚，而是你持续投入的底盘。",
+        mid: "你既能评估风险，也不会因为一点未知就停下。适度准备之后，你愿意给机会留出空间。",
+        low: "你对未知和挑战的容忍度较高，容易被新鲜感和可能性驱动。对重要事项保留基本缓冲，会让冒险更有质量。"
+      },
+      sensitivity: {
+        high: "你能捕捉到环境、情绪和细节里的微妙变化。审美、洞察和体验感是你做判断时的重要信息来源。",
+        mid: "你能注意到细节，但不会被所有信号牵走。你适合把感受转成清楚的观察和实际行动。",
+        low: "你倾向优先看事实、效率和结果。面对细节过载时，这会让你保持清醒，但也可以偶尔停下来听听直觉。"
+      },
+      empathy: {
+        high: "你很容易感受到别人的状态，也愿意承担照顾和理解的角色。你的温度会让人愿意靠近。",
+        mid: "你能理解别人的感受，也能保留自己的判断。你的共情更适合落在实际支持和清楚表达上。",
+        low: "你处理问题时更看重逻辑和边界，不容易被情绪带跑。练习先回应感受、再给建议，会让合作更顺畅。"
+      }
+    };
+    const careerMap = {
+      control: "主导推进", strategy: "研究与策略", connection: "沟通协作", adaptability: "变化型项目",
+      security: "流程与运营", sensitivity: "内容与体验", empathy: "支持与洞察"
+    };
+
+    function setPageScene(scene) {
+      document.body.dataset.scene = scene;
+    }
+
+    function showScreen(id) {
+      screens.forEach((screen) => $(screen).classList.toggle("active", screen === id));
+      if (id !== "quiz") {
+        setPageScene({ home: "dawn", mode: "dawn", result: "return", unlock: "fire", atlas: "territory" }[id] || "dawn");
+        delete document.body.dataset.questionScene;
+        document.body.dataset.variant = "v0";
+      }
+      if (id === "atlas") renderAtlas();
+      window.scrollTo({ top: 0, behavior: "smooth" });
+    }
+
+    document.querySelectorAll("[data-go]").forEach((btn) => {
+      btn.addEventListener("click", () => showScreen(btn.dataset.go));
+    });
+
+    document.querySelectorAll("[data-start]").forEach((btn) => {
+      btn.addEventListener("click", () => {
+        testMode = btn.dataset.start;
+        if (testMode === "full" && !fullAccessEnabled) {
+          showScreen("unlock");
+          return;
+        }
+        activeQuestions = testMode === "quick" ? quickIndexes.map((i) => allQuestions[i]) : allQuestions;
+        answers = Array(activeQuestions.length).fill(null);
+        index = 0;
+        advancing = false;
+        renderQuestion();
+        showScreen("quiz");
+      });
+    });
+
+    $("prevBtn").addEventListener("click", () => {
+      if (!advancing && index > 0) {
+        index -= 1;
+        renderQuestion();
+      }
+    });
+
+    function renderQuestion() {
+      const current = activeQuestions[index];
+      $("progressText").textContent = `第 ${index + 1} / ${activeQuestions.length} 题`;
+      $("progressBar").style.width = `${((index + 1) / activeQuestions.length) * 100}%`;
+      $("question").textContent = current.text;
+      setPageScene(chapterScene[current.chapter] || "dawn");
+      document.body.dataset.questionScene = current.scene;
+      document.body.dataset.variant = `v${index % 5}`;
+      $("scene").className = `scene scene-${current.scene}`;
+      $("sceneIcon").textContent = current.icon;
+      $("sceneLabel").textContent = current.chapter;
+      $("options").innerHTML = "";
+
+      current.options.forEach((option, optionIndex) => {
+        const btn = document.createElement("button");
+        const selected = answers[index] === optionIndex;
+        btn.className = `option ${selected ? "selected" : ""} ${advancing ? "locked" : ""}`;
+        btn.innerHTML = `<span class="letter">${String.fromCharCode(65 + optionIndex)}</span><span>${option.label}</span>`;
+        btn.addEventListener("click", () => selectAnswer(optionIndex));
+        $("options").appendChild(btn);
+      });
+      $("prevBtn").disabled = index === 0 || advancing;
+    }
+
+    function selectAnswer(optionIndex) {
+      if (advancing) return;
+      answers[index] = optionIndex;
+      advancing = true;
+      renderQuestion();
+      window.setTimeout(() => {
+        advancing = false;
+        if (index < activeQuestions.length - 1) {
+          index += 1;
+          renderQuestion();
+          document.querySelector(".quiz").scrollIntoView({ behavior: "smooth", block: "start" });
+        } else {
+          renderResult();
+          showScreen("result");
+        }
+      }, 320);
+    }
+
+    function calculateScores() {
+      return dimensions.map((_, dimIndex) => {
+        let sum = 0;
+        let relevant = 0;
+        activeQuestions.forEach((question, questionIndex) => {
+          const selected = question.options[answers[questionIndex]];
+          const value = profiles[selected.profile][dimIndex];
+          if (value !== 0) {
+            sum += value;
+            relevant += 1;
+          }
+        });
+        const normalized = relevant ? 50 + (sum / (relevant * 2)) * 50 : 50;
+        return Math.max(8, Math.min(92, Math.round(normalized)));
+      });
+    }
+
+    function matchAnimals(scores) {
+      return animals.map((animal) => ({
+        animal,
+        distance: Math.sqrt(animal.vector.reduce((total, value, i) => total + Math.pow(value - scores[i], 2), 0))
+      })).sort((a, b) => a.distance - b.distance);
+    }
+
+    function renderResult() {
+      const scores = calculateScores();
+      const matches = matchAnimals(scores);
+      const animal = matches[0].animal;
+      const isFullReport = testMode === "full";
+      currentResult = { animal, secondary: matches[1].animal, scores, isFullReport };
+      $("resultEmoji").textContent = animal.emoji;
+      $("resultLabel").textContent = isFullReport ? "你的动物性格人格报告" : "你的20题初测结果是";
+      $("resultName").textContent = animal.name;
+      $("resultTitle").textContent = animal.title;
+      $("resultQuote").textContent = animal.quote;
+      $("resultDesc").textContent = animal.desc;
+      $("resultKeywords").innerHTML = animal.keywords.map((word) => `<span class="tag">${word}</span>`).join("");
+      $("resultStrengths").innerHTML = animal.strengths.map((item) => `<li>${item}</li>`).join("");
+      $("resultRisks").innerHTML = animal.risks.map((item) => `<li>${item}</li>`).join("");
+      $("resultAdvice").textContent = animal.advice;
+      $("secondaryMatch").innerHTML = `你还带有 <strong>${matches[1].animal.emoji} ${matches[1].animal.name}</strong> 的一部分特质：${matches[1].animal.title}`;
+      renderRadar(scores);
+      $("dimensionList").innerHTML = dimensions.map((dimension, i) => `
+        <div><div class="dimension-head"><span>${dimension[1]}</span><strong>${scores[i]}</strong></div>
+        <div class="dimension-bar"><i style="width:${scores[i]}%"></i></div></div>`).join("");
+      renderDeepReport(scores, animal, matches[1].animal);
+      $("quickUpgrade").classList.toggle("hidden", isFullReport);
+      $("fullReport").classList.toggle("hidden", !isFullReport);
+      $("fullAdvice").classList.toggle("hidden", !isFullReport);
+      $("deepReport").classList.toggle("hidden", !isFullReport);
+      $("shareResult").classList.toggle("hidden", !isFullReport);
+      $("copyResult").classList.toggle("hidden", !isFullReport);
+      $("printResult").classList.toggle("hidden", !isFullReport);
+      document.querySelector('[data-go="atlas"]').classList.toggle("hidden", !isFullReport);
+    }
+
+    function getLevel(score) {
+      return score >= 65 ? "high" : score <= 40 ? "low" : "mid";
+    }
+
+    function renderDeepReport(scores, animal, secondary) {
+      const ranked = dimensions.map((dimension, i) => ({ key: dimension[0], label: dimension[1], score: scores[i] }))
+        .sort((a, b) => b.score - a.score);
+      const top = ranked.slice(0, 3);
+      const bottom = ranked[ranked.length - 1];
+      $("detailedAnalysis").textContent = `作为${animal.name}型人格，你最突出的三条线索是${top.map((item) => item.label).join("、")}。这让你在面对森林里的未知时，更容易呈现出“${animal.title}”的一面。你的隐藏特质接近${secondary.name}，意味着你并不是单一类型，而是在不同场景下会调动不同的应对方式。`;
+      $("dimensionInsights").innerHTML = ranked.map((item) => `
+        <div class="insight-row"><strong>${item.label} ${item.score}</strong><p>${dimensionNarratives[item.key][getLevel(item.score)]}</p></div>`).join("");
+
+      const directions = [...new Set(top.map((item) => careerMap[item.key]))];
+      $("workStyle").textContent = `你更适合把能力放在需要${directions.slice(0, 2).join("、")}的场景中。对你而言，比起一个固定职业名称，更重要的是工作是否允许你按自己的节奏使用${top[0].label}和${top[1].label}。学习时采用“先理解框架，再完成一个实际输出”的方式，会比单纯堆输入更有成就感。`;
+      $("careerDirections").innerHTML = directions.map((item) => `<span class="tag">${item}</span>`).join("");
+
+      const collaboration = scores[2] >= 60
+        ? "你在协作中需要真实的交流和明确回应。把目标、分工和反馈节奏提前讲清楚，会让你的投入感持续得更久。"
+        : "你在协作中更看重边界和效率。选择职责清楚、沟通不消耗的伙伴，并把关键节点写下来，会让你更愿意长期合作。";
+      const empathyNote = scores[6] >= 60
+        ? "你容易先照顾整体感受，记得把自己的需求也放进讨论里。"
+        : "你擅长保持理性，先确认对方在意什么，再给方案，会让你的判断更容易被接住。";
+      $("collaborationAdvice").textContent = `${collaboration}${empathyNote}`;
+
+      const route = [
+        `放大优势：这周刻意选择一件能使用${top[0].label}的事，不追求一次做大，只要让这项能力产生一次真实结果。`,
+        `形成组合：把${top[1].label}当作你的第二工具。在重要决定前，先用它补问一个你平时容易略过的问题。`,
+        `照顾短板：${bottom.label}是你最需要有意识练习的区域。不是把它变成强项，而是为它准备一个简单的固定动作。`
+      ];
+      $("growthRoute").innerHTML = route.map((item, i) => `<div class="route-step"><b>${i + 1}</b><span>${item}</span></div>`).join("");
+    }
+
+    function renderRadar(scores) {
+      const cx = 180;
+      const cy = 158;
+      const radius = 104;
+      const count = dimensions.length;
+      const point = (i, value) => {
+        const angle = -Math.PI / 2 + (Math.PI * 2 * i) / count;
+        return [cx + Math.cos(angle) * radius * value, cy + Math.sin(angle) * radius * value];
+      };
+      let svg = "";
+      [0.2,0.4,0.6,0.8,1].forEach((level) => {
+        const points = dimensions.map((_, i) => point(i, level).join(",")).join(" ");
+        svg += `<polygon points="${points}" fill="none" stroke="rgba(82,109,93,.18)" stroke-width="1"/>`;
+      });
+      dimensions.forEach((dimension, i) => {
+        const end = point(i, 1);
+        const label = point(i, 1.24);
+        const anchor = label[0] < cx - 12 ? "end" : label[0] > cx + 12 ? "start" : "middle";
+        svg += `<line x1="${cx}" y1="${cy}" x2="${end[0]}" y2="${end[1]}" stroke="rgba(82,109,93,.14)"/>`;
+        svg += `<text x="${label[0]}" y="${label[1]}" text-anchor="${anchor}" dominant-baseline="middle" fill="#efe9da" font-size="12" font-weight="700">${dimension[1]}</text>`;
+      });
+      const dataPoints = scores.map((value, i) => point(i, value / 100).join(",")).join(" ");
+      svg += `<polygon points="${dataPoints}" fill="rgba(109,92,141,.24)" stroke="#6d5c8d" stroke-width="2.5"/>`;
+      scores.forEach((value, i) => {
+        const p = point(i, value / 100);
+        svg += `<circle cx="${p[0]}" cy="${p[1]}" r="3.5" fill="#526d5d" stroke="white" stroke-width="2"/>`;
+      });
+      $("radar").innerHTML = svg;
+    }
+
+    function renderAtlas() {
+      $("atlasGrid").innerHTML = animals.map((animal) => `
+        <article class="animal-card"><span>${animal.emoji}</span><strong>${animal.name}</strong><small>${animal.title}</small></article>`).join("");
+    }
+
+    function showToast(message) {
+      $("toast").textContent = message;
+      $("toast").classList.add("show");
+      window.setTimeout(() => $("toast").classList.remove("show"), 1800);
+    }
+
+    $("copyResult").addEventListener("click", async () => {
+      if (!currentResult) return;
+      const { animal, secondary, scores } = currentResult;
+      const text = `我的动物性格是${animal.emoji}${animal.name}：${animal.title}\n${animal.quote}\n性格关键词：${animal.keywords.join("、")}\n隐藏特质：${secondary.emoji}${secondary.name}\n七维得分：${dimensions.map((d, i) => `${d[1]}${scores[i]}`).join("｜")}`;
+      try {
+        await navigator.clipboard.writeText(text);
+      } catch (error) {
+        const area = document.createElement("textarea");
+        area.value = text;
+        document.body.appendChild(area);
+        area.select();
+        document.execCommand("copy");
+        area.remove();
+      }
+      showToast("结果文案已复制");
+    });
+
+    $("printResult").addEventListener("click", () => window.print());
+
+    function buildShareUrl() {
+      const url = new URL(window.location.href);
+      url.search = "";
+      url.hash = "";
+      url.searchParams.set("from", "share");
+      url.searchParams.set("animal", currentResult.animal.name);
+      return url.toString();
+    }
+
+    $("shareResult").addEventListener("click", async () => {
+      if (!currentResult) return;
+      const shareUrl = buildShareUrl();
+      const shareText = `我测出来是${currentResult.animal.emoji}${currentResult.animal.name}：${currentResult.animal.title}。你也来测测自己是哪种动物性格吧。`;
+      try {
+        if (navigator.share) {
+          await navigator.share({ title: "动物性格人格分析报告", text: shareText, url: shareUrl });
+          return;
+        }
+        await navigator.clipboard.writeText(`${shareText}\n${shareUrl}`);
+        showToast("分享链接已复制");
+      } catch (error) {
+        if (error.name !== "AbortError") showToast("暂时无法复制链接");
+      }
+    });
+
+    $("purchaseBtn").addEventListener("click", () => {
+      if (!PURCHASE_URL) {
+        showToast("请先填入你自己的小红书商品链接");
+        return;
+      }
+      window.open(PURCHASE_URL, "_blank", "noopener");
+    });
+
+    function renderSharedInvite() {
+      const sharedAnimal = pageParams.get("animal");
+      const found = animals.find((animal) => animal.name === sharedAnimal);
+      if (!found || pageParams.get("from") !== "share") return;
+      $("sharedInvite").textContent = `你的朋友测出自己是 ${found.emoji}${found.name}。现在轮到你，看看森林里的你是哪种动物。`;
+      $("sharedInvite").classList.remove("hidden");
+    }
+
+    let audioContext = null;
+    let masterGain = null;
+    let audioNodes = [];
+    let chimeTimer = null;
+
+    function playChime() {
+      if (!audioContext || !masterGain) return;
+      const frequencies = [392, 440, 523.25, 587.33, 659.25];
+      const now = audioContext.currentTime;
+      const oscillator = audioContext.createOscillator();
+      const gain = audioContext.createGain();
+      oscillator.type = "sine";
+      oscillator.frequency.value = frequencies[Math.floor(Math.random() * frequencies.length)];
+      gain.gain.setValueAtTime(0.0001, now);
+      gain.gain.exponentialRampToValueAtTime(0.035, now + 0.08);
+      gain.gain.exponentialRampToValueAtTime(0.0001, now + 3.2);
+      oscillator.connect(gain).connect(masterGain);
+      oscillator.start(now);
+      oscillator.stop(now + 3.3);
+    }
+
+    async function startForestSound() {
+      const AudioCtx = window.AudioContext || window.webkitAudioContext;
+      if (!AudioCtx) {
+        showToast("当前浏览器不支持森林音效");
+        return;
+      }
+      audioContext = new AudioCtx();
+      await audioContext.resume();
+      masterGain = audioContext.createGain();
+      masterGain.gain.setValueAtTime(0.0001, audioContext.currentTime);
+      masterGain.gain.linearRampToValueAtTime(0.2, audioContext.currentTime + 1.2);
+      masterGain.connect(audioContext.destination);
+
+      const noiseBuffer = audioContext.createBuffer(1, audioContext.sampleRate * 3, audioContext.sampleRate);
+      const data = noiseBuffer.getChannelData(0);
+      let last = 0;
+      for (let i = 0; i < data.length; i += 1) {
+        last = last * 0.985 + (Math.random() * 2 - 1) * 0.015;
+        data[i] = last;
+      }
+      const wind = audioContext.createBufferSource();
+      const windFilter = audioContext.createBiquadFilter();
+      const windGain = audioContext.createGain();
+      wind.buffer = noiseBuffer;
+      wind.loop = true;
+      windFilter.type = "lowpass";
+      windFilter.frequency.value = 720;
+      windGain.gain.value = 0.32;
+      wind.connect(windFilter).connect(windGain).connect(masterGain);
+      wind.start();
+      audioNodes.push(wind);
+
+      [110, 164.81, 220].forEach((frequency, i) => {
+        const oscillator = audioContext.createOscillator();
+        const gain = audioContext.createGain();
+        oscillator.type = i === 1 ? "triangle" : "sine";
+        oscillator.frequency.value = frequency;
+        gain.gain.value = i === 1 ? 0.022 : 0.014;
+        oscillator.connect(gain).connect(masterGain);
+        oscillator.start();
+        audioNodes.push(oscillator);
+      });
+      playChime();
+      chimeTimer = window.setInterval(playChime, 6500);
+      $("soundToggle").classList.add("on");
+      $("soundToggle").setAttribute("aria-pressed", "true");
+      $("soundToggle").title = "关闭森林音";
+      $("soundText").textContent = "关闭森林音";
+    }
+
+    function stopForestSound() {
+      if (!audioContext || !masterGain) return;
+      window.clearInterval(chimeTimer);
+      const context = audioContext;
+      masterGain.gain.cancelScheduledValues(context.currentTime);
+      masterGain.gain.linearRampToValueAtTime(0.0001, context.currentTime + 0.45);
+      window.setTimeout(() => {
+        audioNodes.forEach((node) => { try { node.stop(); } catch (error) {} });
+        context.close();
+      }, 520);
+      audioContext = null;
+      masterGain = null;
+      audioNodes = [];
+      $("soundToggle").classList.remove("on");
+      $("soundToggle").setAttribute("aria-pressed", "false");
+      $("soundToggle").title = "开启森林音";
+      $("soundText").textContent = "开启森林音";
+    }
+
+    $("soundToggle").addEventListener("click", () => audioContext ? stopForestSound() : startForestSound());
+    renderAtlas();
+    renderSharedInvite();
+  </script>
+</body>
+</html>
