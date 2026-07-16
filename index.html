@@ -1354,7 +1354,7 @@
 
   <script>
     const $ = (id) => document.getElementById(id);
-    const ACCESS_CODE_HASH = "0930901f3ec11b7af160614b25ab3412b29f3f6ca44332e82a29ba23e2b67fe3";
+    const ACCESS_CODE = "2999";
     const ACCESS_STORAGE_KEY = "animal-personality-access-v1";
 
     function unlockApp() {
@@ -1364,34 +1364,23 @@
       document.body.classList.remove("access-locked");
     }
 
-    async function hashAccessCode(value) {
-      const data = new TextEncoder().encode(value);
-      const digest = await crypto.subtle.digest("SHA-256", data);
-      return [...new Uint8Array(digest)].map((item) => item.toString(16).padStart(2, "0")).join("");
-    }
-
     $("appRoot").inert = true;
     if (sessionStorage.getItem(ACCESS_STORAGE_KEY) === "granted") {
       unlockApp();
     } else {
       document.body.classList.add("access-locked");
-      $("accessForm").addEventListener("submit", async (event) => {
+      $("accessForm").addEventListener("submit", (event) => {
         event.preventDefault();
         const input = $("accessCode");
         const error = $("accessError");
         error.textContent = "";
-        try {
-          const suppliedHash = await hashAccessCode(input.value.trim().toUpperCase());
-          if (suppliedHash !== ACCESS_CODE_HASH) {
-            error.textContent = "解锁码不正确，请核对订单自动发货内容。";
-            input.select();
-            return;
-          }
-          sessionStorage.setItem(ACCESS_STORAGE_KEY, "granted");
-          unlockApp();
-        } catch (error) {
-          error.textContent = "当前浏览器无法完成验证，请更换浏览器后重试。";
+        if (input.value.trim() !== ACCESS_CODE) {
+          error.textContent = "解锁码不正确，请核对订单自动发货内容。";
+          input.select();
+          return;
         }
+        sessionStorage.setItem(ACCESS_STORAGE_KEY, "granted");
+        unlockApp();
       });
     }
 
