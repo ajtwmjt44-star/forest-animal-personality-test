@@ -60,6 +60,51 @@
       -webkit-tap-highlight-color: transparent;
     }
 
+    .access-gate {
+      position: fixed;
+      inset: 0;
+      z-index: 30;
+      display: grid;
+      place-items: center;
+      padding: 20px;
+      background: rgba(12, 29, 20, .68);
+      backdrop-filter: blur(14px);
+    }
+
+    .access-card {
+      width: min(100%, 430px);
+      padding: 34px 28px 28px;
+      border: 1px solid rgba(240, 232, 208, .28);
+      border-radius: 18px;
+      color: #fffaf0;
+      background: linear-gradient(145deg, rgba(12, 40, 28, .96), rgba(37, 35, 47, .96));
+      box-shadow: 0 26px 70px rgba(0, 0, 0, .36);
+      text-align: center;
+    }
+
+    .access-mark { font-size: 42px; line-height: 1; }
+    .access-card h1 { margin-top: 16px; font-size: 34px; }
+    .access-card p { margin: 13px 0 0; color: rgba(255, 250, 240, .72); line-height: 1.75; }
+    .access-form { display: grid; gap: 12px; margin-top: 25px; }
+    .access-form input {
+      width: 100%;
+      min-height: 50px;
+      padding: 0 15px;
+      border: 1px solid rgba(240, 232, 208, .28);
+      border-radius: 10px;
+      outline: none;
+      color: #fffaf0;
+      background: rgba(255, 255, 255, .1);
+      text-align: center;
+      letter-spacing: 1px;
+    }
+    .access-form input:focus { border-color: rgba(215, 215, 155, .86); }
+    .access-form .btn { width: 100%; }
+    .access-error { min-height: 20px; margin: 10px 0 0; color: #f4c5c8; font-size: 13px; }
+    .access-note { margin-top: 18px !important; font-size: 12px; }
+
+    body.access-locked { overflow: hidden; }
+
     .wrap {
       width: min(100%, 940px);
       margin: 0 auto;
@@ -1085,7 +1130,21 @@
   </style>
 </head>
 <body>
-  <main class="wrap">
+  <section id="accessGate" class="access-gate" aria-labelledby="accessTitle">
+    <div class="access-card">
+      <div class="access-mark" aria-hidden="true">🌲</div>
+      <div class="badge">购买用户专属入口</div>
+      <h1 id="accessTitle">输入解锁码</h1>
+      <p>请在小红书订单的自动发货内容中查看解锁码，验证后即可进入完整测试。</p>
+      <form id="accessForm" class="access-form">
+        <input id="accessCode" type="password" inputmode="text" autocomplete="off" autocapitalize="characters" placeholder="请输入解锁码" aria-describedby="accessError" required />
+        <button class="btn" type="submit">验证并开始测试</button>
+      </form>
+      <p id="accessError" class="access-error" role="alert"></p>
+      <p class="access-note">解锁码仅限购买用户使用，请勿外传。</p>
+    </div>
+  </section>
+  <main id="appRoot" class="wrap" aria-hidden="true">
     <section id="home" class="screen active">
       <div class="panel hero">
         <div class="hero-copy">
@@ -1295,6 +1354,47 @@
 
   <script>
     const $ = (id) => document.getElementById(id);
+    const ACCESS_CODE_HASH = "0930901f3ec11b7af160614b25ab3412b29f3f6ca44332e82a29ba23e2b67fe3";
+    const ACCESS_STORAGE_KEY = "animal-personality-access-v1";
+
+    function unlockApp() {
+      $("accessGate").hidden = true;
+      $("appRoot").setAttribute("aria-hidden", "false");
+      $("appRoot").inert = false;
+      document.body.classList.remove("access-locked");
+    }
+
+    async function hashAccessCode(value) {
+      const data = new TextEncoder().encode(value);
+      const digest = await crypto.subtle.digest("SHA-256", data);
+      return [...new Uint8Array(digest)].map((item) => item.toString(16).padStart(2, "0")).join("");
+    }
+
+    $("appRoot").inert = true;
+    if (sessionStorage.getItem(ACCESS_STORAGE_KEY) === "granted") {
+      unlockApp();
+    } else {
+      document.body.classList.add("access-locked");
+      $("accessForm").addEventListener("submit", async (event) => {
+        event.preventDefault();
+        const input = $("accessCode");
+        const error = $("accessError");
+        error.textContent = "";
+        try {
+          const suppliedHash = await hashAccessCode(input.value.trim().toUpperCase());
+          if (suppliedHash !== ACCESS_CODE_HASH) {
+            error.textContent = "解锁码不正确，请核对订单自动发货内容。";
+            input.select();
+            return;
+          }
+          sessionStorage.setItem(ACCESS_STORAGE_KEY, "granted");
+          unlockApp();
+        } catch (error) {
+          error.textContent = "当前浏览器无法完成验证，请更换浏览器后重试。";
+        }
+      });
+    }
+
     const dimensions = [
       ["control", "掌控感"], ["strategy", "策略性"], ["connection", "联结度"],
       ["adaptability", "灵活性"], ["security", "安全感"], ["sensitivity", "感知力"], ["empathy", "共情力"]
