@@ -71,7 +71,7 @@
       backdrop-filter: blur(14px);
     }
 
-    /* Keep the completed access gate out of the page. */
+    /* Author display rules otherwise keep the gate visible after hidden is set. */
     .access-gate[hidden] {
       display: none !important;
     }
@@ -708,6 +708,43 @@
       margin-top: 16px;
     }
 
+    .quick-report {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 16px;
+      margin-top: 18px;
+    }
+
+    .quick-report .wide { grid-column: 1 / -1; }
+    .report-eyebrow {
+      margin-bottom: 8px;
+      color: #d7d79b;
+      font-size: 12px;
+      font-weight: 800;
+      letter-spacing: .08em;
+      text-transform: uppercase;
+    }
+
+    .quick-signal-grid {
+      display: grid;
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+      gap: 10px;
+      margin-top: 13px;
+    }
+
+    .quick-signal {
+      min-height: 142px;
+      padding: 15px;
+      border: 1px solid rgba(240,232,208,.14);
+      border-radius: 14px;
+      background: rgba(255,255,255,.055);
+    }
+
+    .quick-signal strong { display: block; color: #fffaf0; font-size: 15px; }
+    .quick-signal b { display: block; margin-top: 4px; color: #d7d79b; font-size: 25px; line-height: 1; }
+    .quick-signal p { margin-top: 9px !important; font-size: 13px; line-height: 1.62 !important; }
+    .quick-note { margin-top: 14px !important; color: rgba(239,234,218,.58) !important; font-size: 13px; }
+
     .deep-report .wide { grid-column: 1 / -1; }
 
     .insight-grid {
@@ -887,7 +924,10 @@
       .keyword-row, .result-actions { justify-content: center; }
       .result-grid { grid-template-columns: 1fr; }
       .deep-report { grid-template-columns: 1fr; }
+      .quick-report { grid-template-columns: 1fr; }
+      .quick-signal-grid { grid-template-columns: 1fr; }
       .deep-report .wide { grid-column: auto; }
+      .quick-report .wide { grid-column: auto; }
       .atlas-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
       .sound-toggle {
         right: 12px;
@@ -1241,6 +1281,31 @@
             </div>
           </div>
 
+          <div id="quickReport" class="quick-report hidden">
+            <section class="report-card wide">
+              <div class="report-eyebrow">20题初测报告</div>
+              <h3>你的性格底色</h3>
+              <p id="quickProfile"></p>
+              <div id="quickSecondary" class="secondary-match"></div>
+            </section>
+            <section class="report-card wide">
+              <div class="report-eyebrow">这次初测最明显的线索</div>
+              <h3>你的三条显性倾向</h3>
+              <div id="quickSignals" class="quick-signal-grid"></div>
+              <p class="quick-note">它们描述的是你在森林情境中最自然的反应方式，并不是给你贴标签。</p>
+            </section>
+            <section class="report-card">
+              <div class="report-eyebrow">关系里的你</div>
+              <h3>别人会怎样感受到你</h3>
+              <p id="quickConnection"></p>
+            </section>
+            <section class="report-card">
+              <div class="report-eyebrow">给现在的提醒</div>
+              <h3>把你的优势用好</h3>
+              <p id="quickAction"></p>
+            </section>
+          </div>
+
           <div id="quickUpgrade" class="upgrade-card hidden">
             <div>
               <strong>想知道更真实、更细的你？</strong>
@@ -1363,10 +1428,13 @@
     const ACCESS_STORAGE_KEY = "animal-personality-access-v1";
 
     function unlockApp() {
-      $("accessGate").hidden = true;
+      const gate = $("accessGate");
+      gate.hidden = true;
+      gate.setAttribute("aria-hidden", "true");
       $("appRoot").setAttribute("aria-hidden", "false");
       $("appRoot").inert = false;
       document.body.classList.remove("access-locked");
+      $("accessCode").blur();
     }
 
     function getAccessCode(value) {
@@ -1729,19 +1797,43 @@
       $("dimensionList").innerHTML = dimensions.map((dimension, i) => `
         <div><div class="dimension-head"><span>${dimension[1]}</span><strong>${scores[i]}</strong></div>
         <div class="dimension-bar"><i style="width:${scores[i]}%"></i></div></div>`).join("");
+      renderQuickReport(scores, animal, matches[1].animal);
       renderDeepReport(scores, animal, matches[1].animal);
       $("quickUpgrade").classList.toggle("hidden", isFullReport);
+      $("quickReport").classList.toggle("hidden", isFullReport);
       $("fullReport").classList.toggle("hidden", !isFullReport);
       $("fullAdvice").classList.toggle("hidden", !isFullReport);
       $("deepReport").classList.toggle("hidden", !isFullReport);
       $("shareResult").classList.toggle("hidden", !isFullReport);
-      $("copyResult").classList.toggle("hidden", !isFullReport);
+      $("copyResult").classList.remove("hidden");
+      $("copyResult").textContent = isFullReport ? "复制结果文案" : "复制我的初测结果";
       $("printResult").classList.toggle("hidden", !isFullReport);
-      document.querySelector('[data-go="atlas"]').classList.toggle("hidden", !isFullReport);
+      document.querySelector('[data-go="atlas"]').classList.remove("hidden");
     }
 
     function getLevel(score) {
       return score >= 65 ? "high" : score <= 40 ? "low" : "mid";
+    }
+
+    function renderQuickReport(scores, animal, secondary) {
+      const ranked = dimensions.map((dimension, i) => ({ key: dimension[0], label: dimension[1], score: scores[i] }))
+        .sort((a, b) => b.score - a.score);
+      const top = ranked.slice(0, 3);
+      const connection = scores[2];
+      const empathy = scores[6];
+      const relationshipNote = connection >= 60
+        ? "你会因为真实的回应和稳定的连接而更有能量。别人通常会感到你愿意靠近、也愿意投入；把自己的期待提前说清楚，关系会更轻松。"
+        : "你更习惯先观察、确认安全感，再决定靠近多少。别人会感到你有分寸、有边界；适时告诉对方你的节奏，会让理解比猜测更容易发生。";
+      const empathyNote = empathy >= 60
+        ? "你很容易接住别人的情绪，也别忘了给自己的需求留一个位置。"
+        : "你更擅长保持冷静和清醒，先回应感受再给判断，会让你的可靠更有温度。";
+
+      $("quickProfile").textContent = animal.desc;
+      $("quickSecondary").innerHTML = `你的第二倾向接近 <strong>${secondary.emoji} ${secondary.name}</strong>：${secondary.title}。它会在陌生环境、关系变化或需要转换策略时显出来。`;
+      $("quickSignals").innerHTML = top.map((item) => `
+        <article class="quick-signal"><strong>${item.label}</strong><b>${item.score}</b><p>${dimensionNarratives[item.key][getLevel(item.score)]}</p></article>`).join("");
+      $("quickConnection").textContent = `${relationshipNote}${empathyNote}`;
+      $("quickAction").textContent = animal.advice;
     }
 
     function renderDeepReport(scores, animal, secondary) {
