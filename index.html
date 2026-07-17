@@ -1535,7 +1535,14 @@
     // Replace this with your own Xiaohongshu product URL before selling.
     const PURCHASE_URL = "";
     const pageParams = new URLSearchParams(window.location.search);
-    const fullAccessEnabled = pageParams.get("full") === "1";
+    function hasFullAccess() {
+      if (pageParams.get("full") === "1") return true;
+      try {
+        return sessionStorage.getItem(ACCESS_STORAGE_KEY) === "granted";
+      } catch (storageError) {
+        return false;
+      }
+    }
     const screens = ["home", "mode", "quiz", "result", "unlock", "atlas"];
     let activeQuestions = [];
     let answers = [];
@@ -1615,7 +1622,7 @@
     document.querySelectorAll("[data-start]").forEach((btn) => {
       btn.addEventListener("click", () => {
         testMode = btn.dataset.start;
-        if (testMode === "full" && !fullAccessEnabled) {
+        if (testMode === "full" && !hasFullAccess()) {
           showScreen("unlock");
           return;
         }
