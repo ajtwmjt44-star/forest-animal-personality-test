@@ -71,6 +71,11 @@
       backdrop-filter: blur(14px);
     }
 
+    /* Keep the completed access gate out of the page. */
+    .access-gate[hidden] {
+      display: none !important;
+    }
+
     .access-card {
       width: min(100%, 430px);
       padding: 34px 28px 28px;
